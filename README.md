@@ -18,6 +18,8 @@ CUDA (>=10.1) (for cuda implementations)
 For Ubuntu 20.04 with CUDA installed via `apt-get`
 ```
 CUDA_ROOT=/usr/ meson setup --debug build --buildtype=debugoptimized --prefix=[PREFIX] -Denable_cuda=true
+cd build
+ninja
 ```
 where `[PREFIX]` is the newsched installation prefix
 
