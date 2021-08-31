@@ -1,0 +1,53 @@
+module: wifi
+block: frame_equalizer
+label: Wifi Frame Equalizer
+
+properties:
+-   id: blocktype
+    value: general
+
+parameters:
+-   id: algo
+    label: Algorithm
+    dtype: int
+    settable: false
+-   id: freq
+    label: Frequency
+    dtype: double
+    settable: false
+-   id: bw
+    label: Bandwidth
+    dtype: double
+    settable: false
+-   id: log
+    label: Log
+    dtype: bool
+    settable: false
+    default: 'false'
+-   id: debug
+    label: Debug
+    dtype: bool
+    settable: false
+    default: 'false'
+
+ports:
+-   domain: stream
+    id: in
+    direction: input
+    type: gr_complex
+    dims: '{64}'
+-   domain: stream
+    id: out
+    direction: output
+    type: uint8_t
+    dims: '{48}' 
+-   domain: message
+    id: symbols
+    direction: output
+    optional: 'true'
+
+implementations:
+-   id: cpu
+-   id: cuda
+
+file_format: 1

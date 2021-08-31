@@ -1,0 +1,33 @@
+module: wifi
+block: decode_packetized
+label: Wifi Decode MAC Packetized
+
+properties:
+-   id: blocktype
+    value: general
+
+parameters:
+-   id: log
+    label: Log
+    dtype: bool
+    settable: false
+    default: 'false'
+-   id: debug
+    label: Debug
+    dtype: bool
+    settable: false
+    default: 'false'
+
+ports:
+-   domain: message
+    id: pdus
+    direction: input
+-   domain: message
+    id: out
+    direction: output
+    optional: 'true'
+
+implementations:
+-   id: cpu
+
+file_format: 1

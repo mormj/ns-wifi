@@ -1,0 +1,51 @@
+module: wifi
+block: sync_short
+label: Wifi Sync Short
+
+properties:
+-   id: blocktype
+    value: general
+
+parameters:
+-   id: threshold
+    label: Threshold
+    dtype: double
+    settable: false
+-   id: min_plateau
+    label: Min Plateau
+    dtype: unsigned int
+    settable: false
+-   id: log
+    label: Log
+    dtype: bool
+    settable: false
+    default: 'false'
+-   id: debug
+    label: Debug
+    dtype: bool
+    settable: false
+    default: 'false'
+
+ports:
+-   domain: stream
+    id: in
+    direction: input
+    type: gr_complex
+-   domain: stream
+    id: abs
+    direction: input
+    type: gr_complex
+-   domain: stream
+    id: cor
+    direction: input
+    type: float
+-   domain: stream
+    id: out
+    direction: output
+    type: gr_complex
+
+implementations:
+-   id: cpu
+-   id: cuda
+
+file_format: 1

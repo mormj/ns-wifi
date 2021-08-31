@@ -1,0 +1,43 @@
+module: wifi
+block: pre_sync
+label: Wifi Pre Sync
+
+properties:
+-   id: blocktype
+    value: general
+
+parameters:
+-   id: window_size
+    label: Window Size
+    dtype: size_t
+    settable: false
+    default: 48
+-   id: buffer_size
+    label: Internal Buffer Size
+    dtype: size_t
+    settable: false
+    default: 65536
+
+ports:
+-   domain: stream
+    id: in
+    direction: input
+    type: gr_complex
+-   domain: stream
+    id: out
+    direction: output
+    type: gr_complex
+-   domain: stream
+    id: abs
+    direction: output
+    type: gr_complex
+-   domain: stream
+    id: cor
+    direction: output
+    type: float
+
+
+implementations:
+-   id: cuda
+
+file_format: 1

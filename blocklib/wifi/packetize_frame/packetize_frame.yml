@@ -1,0 +1,48 @@
+module: wifi
+block: packetize_frame
+label: Wifi Packetize Frame
+
+properties:
+-   id: blocktype
+    value: general
+
+parameters:
+-   id: algo
+    label: Algorithm
+    dtype: int
+    settable: false
+-   id: freq
+    label: Frequency
+    dtype: double
+    settable: false
+-   id: bw
+    label: Bandwidth
+    dtype: double
+    settable: false
+-   id: log
+    label: Log
+    dtype: bool
+    settable: false
+    default: 'false'
+-   id: debug
+    label: Debug
+    dtype: bool
+    settable: false
+    default: 'false'
+
+ports:
+-   domain: stream
+    id: in
+    direction: input
+    type: gr_complex
+    dims: '{64}'
+-   domain: message
+    id: pdus
+    direction: output
+    optional: 'true'
+
+implementations:
+-   id: cpu
+# -   id: cuda
+
+file_format: 1

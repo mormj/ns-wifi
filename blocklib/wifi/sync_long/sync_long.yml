@@ -1,0 +1,40 @@
+module: wifi
+block: sync_long
+label: Wifi Sync Long
+
+properties:
+-   id: blocktype
+    value: general
+
+parameters:
+-   id: sync_length
+    label: Sync Length
+    dtype: unsigned int
+    settable: false
+-   id: log
+    label: Log
+    dtype: bool
+    settable: false
+    default: 'false'
+-   id: debug
+    label: Debug
+    dtype: bool
+    settable: false
+    default: 'false'
+
+ports:
+-   domain: stream
+    id: in
+    direction: input
+    type: gr_complex
+-   domain: stream
+    id: out
+    direction: output
+    type: gr_complex
+    dims: '{64}'
+
+implementations:
+-   id: cpu
+-   id: cuda
+
+file_format: 1
