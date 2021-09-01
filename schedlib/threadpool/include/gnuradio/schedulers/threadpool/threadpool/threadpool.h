@@ -16,6 +16,7 @@
  *  limitations under the License.
  *
  *********************************************************/
+#pragma once
 
 #include <atomic>
 #include <chrono>
@@ -29,6 +30,7 @@
 #include "detail.h"
 
 #include <pmt/pmt.h>
+#include <gnuradio/thread.hh>
 using namespace std::chrono_literals;
 using namespace pmt;
 namespace gr {
@@ -36,6 +38,8 @@ namespace schedulers {
 namespace threadpool {
 
 typedef std::function<void(pmt_t)> message_func_t;
+
+
 
 #if 1
 class threadpool
@@ -55,6 +59,8 @@ public:
             std::shared_ptr<std::atomic<bool>> flag(
                 this->flags[i]); // a copy of the shared ptr to the flag
             auto f = [this, i, flag, message_funcs /* a copy of the shared ptr to the flag */]() {
+                gr::thread::set_thread_name(pthread_self(),
+                                        std::string("tp") + std::to_string(i));
                 // std::cout << "entering thread " << i << std::endl;
                 std::atomic<bool>& _flag = *flag;
                 pmt::pmt_t _p;
@@ -62,7 +68,7 @@ public:
                 // burst_worker b(i);
                 while (true) {
                     while (isPop) { // if there is anything in the queue
-                        // std::cout << "dequeueing ... " << std::endl;
+                        // std::cout << i << " dequeueing ... " << std::endl;
                         // std::cout << "dequeue " << i << " ? " << this->q.qsize() <<
                         // std::endl;
                         // this->oq.push(b.process(_p));

@@ -101,10 +101,10 @@ private:
             }
         }
 
-            FILE *pFile;
-            pFile = fopen("/tmp/ns_rx_bits.dat", "wb");
-            fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-			fclose(pFile);
+            // FILE *pFile;
+            // pFile = fopen("/tmp/ns_rx_bits.dat", "wb");
+            // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+			// fclose(pFile);
 
         deinterleave(rx_bits, deinterleaved_bits, frame_info.n_sym, ofdm_info);
         uint8_t* decoded = decoder.decode(&ofdm_info, &frame_info, deinterleaved_bits);

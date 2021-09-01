@@ -62,7 +62,7 @@ def main():
         # fg.connect(ns, 0, sync_long, 1).set_custom_buffer(gr.vmcirc_buffer_properties.make(gr.vmcirc_buffer_type.AUTO).set_buffer_size(buf_size))
 
         mtsched = mt.scheduler_mt("mtsched")
-        tpsched = threadpool.scheduler_threadpool("threadpool", num_threads=1)
+        tpsched = threadpool.scheduler_threadpool("threadpool", num_threads=8)
           
         fg.add_scheduler(mtsched)
         fg.add_scheduler(tpsched)
