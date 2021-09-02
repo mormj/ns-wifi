@@ -3,7 +3,7 @@
 #include <boost/format.hpp>
 #include <thread>
 
-#include <gnuradio/wifi/decode_packetized.hh>
+#include <gnuradio/clonable_block.hh>
 namespace gr {
 namespace schedulers {
 namespace threadpool {
@@ -23,22 +23,23 @@ thread_wrapper::thread_wrapper(int id,
 
     d_thread = std::thread(thread_body, this);
 
-    // Giving up trying to make this generic - for this example
+    auto clonable = std::dynamic_pointer_cast<clonable_block>(this->d_blocks[0]);
+    if (!clonable)
+    {
+        throw std::runtime_error("Block is not clonable");
+    }
+
     std::vector<message_func_t> cb_funcs;
     std::vector<block_sptr> copied_blocks(tpp.num_threads);
     for (int i=0; i<tpp.num_threads; i++)
     {
-        auto newblock = gr::wifi::decode_packetized::make_cpu({false, false});
-        auto lambda = [this, newblock](pmt::pmt_t msg) { return newblock->get_first_message_port(port_direction_t::INPUT)->callback()(msg); };
+        auto newblock = clonable->clone();
+        auto lambda = [this, newblock](pmt::pmt_t msg) 
+        { 
+            return newblock->get_first_message_port(port_direction_t::INPUT)->callback()(msg); 
+        };
         cb_funcs.push_back((message_func_t)lambda);
     }
-
-    d_msgport = this->d_blocks[0]->get_first_message_port(port_direction_t::INPUT);
-    // auto port = this->d_blocks[0]->get_port(0, port_type_t::MESSAGE, port_direction_t::INPUT);
-    // d_msgport = std::dynamic_pointer_cast<message_port>(
-    //     this->d_blocks[0]->get_port(0, port_type_t::MESSAGE, port_direction_t::INPUT));
-
-    
 
     d_tp = std::make_unique<threadpool>(tpp.num_threads, tpp.queue_depth, cb_funcs);
 }

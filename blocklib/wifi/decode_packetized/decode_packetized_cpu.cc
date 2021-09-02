@@ -27,6 +27,11 @@ decode_packetized_cpu::decode_packetized_cpu(const decode_packetized::block_args
     d_64qam = constellation_64qam::make();
 }
 
+std::shared_ptr<block> decode_packetized_cpu::clone() const
+{
+	return std::make_shared<decode_packetized_cpu>(block_args{d_log, d_debug});
+}
+
 
 work_return_code_t decode_packetized_cpu::work(std::vector<block_work_input>& work_input,
                                              std::vector<block_work_output>& work_output)

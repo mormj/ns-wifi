@@ -21,10 +21,12 @@
 #include "equalizer/ls.h"
 #include "equalizer/sta.h"
 
+#include <gnuradio/clonable_block.hh>
+
 namespace gr {
 namespace wifi {
 
-class decode_packetized_cpu : public decode_packetized
+class decode_packetized_cpu : public decode_packetized, public clonable_block
 {
 public:
     decode_packetized_cpu(const block_args& args);
@@ -32,6 +34,8 @@ public:
                                     std::vector<block_work_output>& work_output) override;
 
 	int crc_cnt = 0;
+
+    std::shared_ptr<block> clone() const override;
 private:
     void decode();
     void deinterleave();
