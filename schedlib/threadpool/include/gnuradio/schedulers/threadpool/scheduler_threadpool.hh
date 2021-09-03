@@ -2,7 +2,7 @@
 #include <gnuradio/domain.hh>
 #include <gnuradio/graph_utils.hh>
 #include <gnuradio/scheduler.hh>
-#include <gnuradio/vmcircbuf.hh>
+#include <gnuradio/buffer_cpu_vmcirc.hh>
 
 #include "thread_wrapper.hh"
 namespace gr {
@@ -43,7 +43,7 @@ public:
         : scheduler(name), s_num_threads(num_threads), s_queue_depth(queue_depth)
     {
         _default_buf_properties =
-            vmcirc_buffer_properties::make(vmcirc_buffer_type::AUTO);
+            buffer_cpu_vmcirc_properties::make(buffer_cpu_vmcirc_type::AUTO);
     }
     ~scheduler_threadpool(){};
 
