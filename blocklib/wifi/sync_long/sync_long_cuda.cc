@@ -55,10 +55,10 @@ sync_long_cuda::sync_long_cuda(const sync_long::block_args& args)
                                &LONG[0],
                                64 * sizeof(cufftComplex),
                                cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaMemcpy(d_dev_training_freq + 64,
-                               &LONG[0],
-                               64 * sizeof(cufftComplex),
-                               cudaMemcpyHostToDevice));
+    // checkCudaErrors(cudaMemcpy(d_dev_training_freq + 64,
+    //                            &LONG[0],
+    //                            64 * sizeof(cufftComplex),
+    //                            cudaMemcpyHostToDevice));
 
     checkCudaErrors(
         cufftExecC2C(d_plan, d_dev_training_freq, d_dev_training_freq, CUFFT_FORWARD));
@@ -73,7 +73,7 @@ sync_long_cuda::sync_long_cuda(const sync_long::block_args& args)
 }
 
 work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_input,
-                                             std::vector<block_work_output>& work_output)
+                                        std::vector<block_work_output>& work_output)
 {
     // Since this is a decimating block, forecast for noutput
     // int ninput = std::min(work_input[0].n_items, work_input[1].n_items);
@@ -125,8 +125,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     d_state = WAITING_FOR_TAG;
                     continue;
                 }
-            } 
-            else { // no more tags
+            } else { // no more tags
                 if (max_consume < 80 ||
                     max_produce < 64) { // need an entire OFDM symbol to do anything here
                     // nconsumed += max_consume;
@@ -193,7 +192,11 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     // std::cout << "freq_corr = [";
 
                     size_t max_index = 0;
+                    size_t max_index_2 = 0;
                     float max_value = 0.0;
+                    gr_complex corr_1;
+                    gr_complex corr_2;
+
                     for (size_t i = 0; i < host_data.size(); i++) {
                         abs_corr[i] = std::abs(host_data[i]);
                         // std::cout << abs_corr[i];
@@ -202,9 +205,24 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
                         if (abs_corr[i] > max_value) {
                             max_value = abs_corr[i];
+                            max_index_2 = max_index;
                             max_index = i;
+                            corr_2 = corr_1;
+                            corr_1 = host_data[i];
                         }
                     }
+
+                    if (max_index_2 > max_index) {
+                        d_freq_offset =
+                            arg(host_data[max_index] * conj(host_data[max_index_2])) /
+                            (max_index_2 - max_index);
+                            max_index = max_index_2;
+                    } else {
+                        d_freq_offset =
+                            arg(host_data[max_index_2] * conj(host_data[max_index])) /
+                            (max_index - max_index_2);
+                    }
+
 
                     // size_t max_index = 297;
 
@@ -215,7 +233,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                         copy_index = max_index - 160 + 32 + 1;
                     }
 
-                    gr_complex tmp[128];
+                    // gr_complex tmp[128];
 
                     checkCudaErrors(cudaMemcpyAsync(out + nproduced,
                                                     in + (offset - nread + copy_index),
@@ -223,11 +241,11 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                                                     cudaMemcpyDeviceToDevice,
                                                     d_stream));
 
-                    checkCudaErrors(cudaMemcpyAsync(tmp,
-                                                    in + (offset - nread + copy_index),
-                                                    sizeof(gr_complex) * 128,
-                                                    cudaMemcpyDeviceToHost,
-                                                    d_stream));
+                    // checkCudaErrors(cudaMemcpyAsync(tmp,
+                    //                                 in + (offset - nread + copy_index),
+                    //                                 sizeof(gr_complex) * 128,
+                    //                                 cudaMemcpyDeviceToHost,
+                    //                                 d_stream));
                     cudaStreamSynchronize(d_stream);
 
 
@@ -236,13 +254,13 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                         pmt::from_double(d_freq_offset_short - d_freq_offset);
                     const pmt::pmt_t srcid = pmt::string_to_symbol(name());
                     work_output[0].add_tag(nwritten + nproduced / 64, key, value, srcid);
-                    // std::cout << "SYNC LONG tag at " << nwritten + nproduced / 64 << std::endl;
+                    // std::cout << "SYNC LONG tag at " << nwritten + nproduced / 64 <<
+                    // std::endl;
                     //   add_item_tag(0, nwritten + nproduced, key, value, srcid);
-                        packet_cnt++;
-                        if (packet_cnt % 1000 == 0)
-                        {
+                    packet_cnt++;
+                    if (packet_cnt % 1000 == 0) {
                         std::cout << "sync_long: " << packet_cnt << std::endl;
-                        }
+                    }
 
                     d_num_syms = 0;
                     d_state = FINISH_LAST_FRAME;
