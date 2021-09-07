@@ -10,7 +10,8 @@ wifi_sources += ['equalizer/base.cc',
                 'equalizer/sta.cc',
                 'viterbi_decoder/base.cc',
                 # 'viterbi_decoder/viterbi_decoder_generic.cc',
-                'viterbi_decoder/viterbi_decoder_x86.cc']
+                'viterbi_decoder/viterbi_decoder_x86.cc'
+                ]
 
 # This is ugly, and there HAS to be a better way to bring in dependencies
 link_args = ['-lnewsched-pmt','-lnewsched-runtime', '-lnewsched-blocklib-digital', '-lnewsched-blocklib-filter', '-lnewsched-blocklib-fft', '-lnewsched-blocklib-blocks']

@@ -90,7 +90,7 @@ private:
         2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47
     };
 
-    void decode(uint8_t* rx_bits,
+    bool decode(uint8_t* rx_bits,
                 uint8_t* rx_symbols,
                 uint8_t* deinterleaved_bits,
                 uint8_t* out_bytes,
@@ -120,12 +120,15 @@ private:
         boost::crc_32_type result;
         result.process_bytes(out_bytes + 2, frame_info.psdu_size);
         if (result.checksum() != 558161692) {
-            dout << "checksum wrong -- dropping" << std::endl;
-            return;
+            // std::cout << "checksum wrong -- dropping" << std::endl;
+
+
+
+            return false;
         } else {
             crc_cnt++;
-            if (crc_cnt % 1000 == 0) {
-                std::cout << "burst_worker:" << crc_cnt << std::endl;
+            if (crc_cnt % 100 == 0) {
+                std::cout << "crc:" << crc_cnt << std::endl;
             }
         }
 
@@ -138,6 +141,8 @@ private:
         //                        pmt::from_long(LINKTYPE_IEEE802_11));
 
         // message_port_pub(pmt::mp("out"), pmt::cons(d_meta, blob));
+
+        return true;
     }
 
     void deinterleave(uint8_t* rx_bits,

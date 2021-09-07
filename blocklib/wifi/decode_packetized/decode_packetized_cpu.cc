@@ -71,6 +71,9 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
         pmt::dict_ref(meta, pmt::mp("freq"), pmt::from_double(2412000000)));
     d_freq_offset = pmt::to_double(
         pmt::dict_ref(meta, pmt::mp("freq_offset"), pmt::from_double(0.0)));
+    auto pc = pmt::to_uint64(
+        pmt::dict_ref(meta, pmt::mp("packet_cnt"), pmt::from_uint64(0)));
+
 
     switch (d_frame_encoding) {
     case 0:
@@ -108,8 +111,26 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
     d_frame = frame_param(d_ofdm, d_frame_bytes);
 
     // need to equalize and demap the samples to d_rx_bits
-    decode(d_rx_bits, d_rx_symbols, d_deinterleaved_bits, out_bytes, d_decoder,
-           d_frame, d_ofdm);
+    if (!decode(d_rx_bits, d_rx_symbols, d_deinterleaved_bits, out_bytes, d_decoder,
+           d_frame, d_ofdm))
+           {
+                    // FILE *pFile;
+                    // char tmp[1024];
+                    // sprintf(tmp,"/tmp/decode_%d.dat", this->id());
+                    // pFile = fopen(tmp, "a");
+                    // fprintf(pFile, "%d,%d,", pc, d_frame_encoding);
+                    // // for (int i=0; i<64*23; i++)
+                    // // {
+                    // //     fprintf(pFile, "%.6f+%.6f,", real(samples[i]), imag(samples[i]));
+                    // // }
+                    // for (int i=0; i<64; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(H[i]), imag(H[i]));
+                    // }
+                    // fprintf(pFile, "\n");
+                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                    // fclose(pFile);
+           }
 
     // Insert MAC Decode code here
     // std::cout << "Threadpool got new burst" << std::endl;
@@ -120,49 +141,12 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
     pmt::pmt_t pdu = pmt::PMT_NIL;
 
     this->packet_cnt++;
-    // std::cout << "worker: " << packet_cnt << std::endl;
+	if (packet_cnt % 1000 == 0)
+      std::cout << "decoded: " << packet_cnt << std::endl;
 
 	// send the pdu out the output port
 
     // return pdu;
-}
-
-void decode_packetized_cpu::decode() {
-
-	for(int i = 0; i < d_frame.n_sym * 48; i++) {
-		for(int k = 0; k < d_ofdm.n_bpsc; k++) {
-			d_rx_bits[i*d_ofdm.n_bpsc + k] = !!(d_rx_symbols[i] & (1 << k));
-		}
-	}
-
-	deinterleave();
-	uint8_t *decoded = d_decoder.decode(&d_ofdm, &d_frame, d_deinterleaved_bits);
-	descramble(decoded);
-	print_output();
-
-	// skip service field
-	boost::crc_32_type result;
-	result.process_bytes(out_bytes + 2, d_frame.psdu_size);
-	if(result.checksum() != 558161692) {
-		dout << "checksum wrong -- dropping" << std::endl;
-		return;
-	}
-
-	// mylog(boost::format("encoding: %1% - length: %2% - symbols: %3%")
-	// 		% d_ofdm.encoding % d_frame.psdu_size % d_frame.n_sym);
-
-#if 0
-	// create PDU
-	pmt::pmt_t blob = pmt::make_blob(out_bytes + 2, d_frame.psdu_size - 4);
-	pmt::pmt_t enc = pmt::from_uint64(d_ofdm.encoding);
-	pmt::pmt_t dict = pmt::make_dict();
-	dict = pmt::dict_add(dict, pmt::mp("encoding"), enc);
-	dict = pmt::dict_add(dict, pmt::mp("snr"), pmt::from_double(d_snr));
-	dict = pmt::dict_add(dict, pmt::mp("nomfreq"), pmt::from_double(d_nom_freq));
-	dict = pmt::dict_add(dict, pmt::mp("freqofs"), pmt::from_double(d_freq_offset));
-	dict = pmt::dict_add(dict, pmt::mp("dlt"), pmt::from_long(LINKTYPE_IEEE802_11));
-	message_port_pub(pmt::mp("out"), pmt::cons(dict, blob));
-#endif
 }
 
 void decode_packetized_cpu::deinterleave() {

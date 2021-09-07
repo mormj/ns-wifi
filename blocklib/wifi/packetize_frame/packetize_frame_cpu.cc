@@ -133,9 +133,9 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                 }
 
 
-                size_t vlen;
-                gr_complex* pdu_vec =
-                    pmt::c32vector_writable_elements(pmt::cdr(d_pdu), vlen);
+                // size_t vlen;
+                // gr_complex* pdu_vec =
+                //     pmt::c32vector_writable_elements(pmt::cdr(d_pdu), vlen);
 
                 for (int o = 0; o < symbols_to_process; o++) {
                     if (d_current_symbol > d_frame_symbols + 2) {
@@ -143,7 +143,7 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                         continue;
                     }
 
-                    memcpy(pdu_vec + 64 * (d_current_symbol - 3),
+                    memcpy(samples_buf.data() + 64 * (d_current_symbol - 3),
                            in + nconsumed * 64,
                            64 * sizeof(gr_complex));
 
@@ -157,10 +157,64 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
 
             if (tag_idx < tags.size()) {
                 // new frame -- send out the old frame
-                if (d_pdu) {
+                if (new_packet) { //(d_pdu) {
+                    // pmt::pmt_t meta(pmt::car(d_pdu));
+                    // pmt::pmt_t data(pmt::cdr(d_pdu));
+
+                    // size_t num_pdu_samples = pmt::length(data);
+                    // size_t len_bytes(0);
+
+                    // const gr_complex *samples =
+                    //     (const gr_complex *)pmt::c32vector_elements(data, len_bytes);
+                    // std::cout << "pub " << samples_buf[8] << std::endl;
+                    auto samples =
+                        pmt::init_c32vector(64 * d_frame_symbols, samples_buf.data());
+                    
+                    pmt::pmt_t d = pmt::make_dict();
+                    d = pmt::dict_add(
+                        d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
+                    d = pmt::dict_add(
+                        d, pmt::mp("frame_symbols"), pmt::from_uint64(d_frame_symbols));
+                    d = pmt::dict_add(
+                        d, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
+                    d = pmt::dict_add(
+                        d, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
+                    d = pmt::dict_add(d, pmt::mp("freq"), pmt::from_double(d_freq));
+                    d = pmt::dict_add(d, pmt::mp("bw"), pmt::from_double(d_bw));
+                    d = pmt::dict_add(d,
+                                      pmt::mp("freq_offset"),
+                                      pmt::from_double(d_freq_offset_from_synclong));
+                    d = pmt::dict_add(
+                        d, pmt::mp("H"), pmt::init_c32vector(64, d_equalizer->get_H()));
+                    d = pmt::dict_add(
+                        d, pmt::mp("prev_pilots"), pmt::init_c32vector(4, d_prev_pilots));
+
+                    d = pmt::dict_add(
+                        d, pmt::mp("packet_cnt"), pmt::from_uint64(packet_cnt));
+
+                    auto pdu = pmt::cons(d, samples);
+
                     // std::cout << "publish frame" << std::endl;
-                    get_message_port("pdus")->post(d_pdu);
-                    d_pdu = nullptr;
+                    get_message_port("pdus")->post(pdu);
+                    // d_pdu = nullptr;
+                    // FILE *pFile;
+                    // pFile = fopen("/tmp/packetize.dat", "a");
+                    // fprintf(pFile, "%d,", packet_cnt);
+                    // for (int i=0; i<64*23; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(samples_buf[i]), imag(samples_buf[i]));
+                    // }
+                    // fprintf(pFile, "\n");
+                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                    // fclose(pFile);
+                    packet_cnt++;
+                        
+                        if (packet_cnt % 1000 == 0)
+                        {
+                        std::cout << "packetize_frame: " << packet_cnt << std::endl;
+                        }
+
+                    new_packet = false;
                 }
 
                 d_current_symbol = 0;
@@ -203,35 +257,34 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
 
                     // std::cout << d_frame_bytes << " / " << d_frame_encoding <<
                     // std::endl;
-                    pmt::pmt_t d = pmt::make_dict();
-                    d = pmt::dict_add(
-                        d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
-                    d = pmt::dict_add(
-                        d, pmt::mp("frame_symbols"), pmt::from_uint64(d_frame_symbols));
-                    d = pmt::dict_add(
-                        d, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
-                    d = pmt::dict_add(
-                        d, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
-                    d = pmt::dict_add(d, pmt::mp("freq"), pmt::from_double(d_freq));
-                    d = pmt::dict_add(d, pmt::mp("bw"), pmt::from_double(d_bw));
-                    d = pmt::dict_add(d,
-                                      pmt::mp("freq_offset"),
-                                      pmt::from_double(d_freq_offset_from_synclong));
-                    d = pmt::dict_add(
-                        d, pmt::mp("H"), pmt::init_c32vector(64, d_equalizer->get_H()));
-                    d = pmt::dict_add(
-                        d, pmt::mp("prev_pilots"), pmt::init_c32vector(4, d_prev_pilots));
+                    // pmt::pmt_t d = pmt::make_dict();
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("frame_symbols"), pmt::from_uint64(d_frame_symbols));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
+                    // d = pmt::dict_add(d, pmt::mp("freq"), pmt::from_double(d_freq));
+                    // d = pmt::dict_add(d, pmt::mp("bw"), pmt::from_double(d_bw));
+                    // d = pmt::dict_add(d,
+                    //                   pmt::mp("freq_offset"),
+                    //                   pmt::from_double(d_freq_offset_from_synclong));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("H"), pmt::init_c32vector(64, d_equalizer->get_H()));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("prev_pilots"), pmt::init_c32vector(4, d_prev_pilots));
 
-                    auto samples =
-                        pmt::make_c32vector(64 * d_frame_symbols, gr_complex(0, 0));
-                    d_pdu = pmt::cons(d, samples);
+                    // auto samples =
+                    //     pmt::make_c32vector(64 * d_frame_symbols, gr_complex(0, 0));
+                    // d_pdu = pmt::cons(d, samples);
 
-                    packet_cnt++;
-                        
-                        if (packet_cnt % 1000 == 0)
-                        {
-                        std::cout << "packetize_frame: " << packet_cnt << std::endl;
-                        }
+                    if (samples_buf.size() < d_frame_symbols * 64) {
+                        samples_buf.resize(d_frame_symbols * 64);
+                    }
+                    new_packet = true;
+
 
                     d_state = FINISH_LAST_FRAME;
 

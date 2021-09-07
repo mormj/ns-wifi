@@ -64,6 +64,10 @@ public:
                 // std::cout << "entering thread " << i << std::endl;
                 std::atomic<bool>& _flag = *flag;
                 pmt::pmt_t _p;
+
+                // if (i == 0)
+                // {
+
                 bool isPop = this->q.pop(_p);
                 // burst_worker b(i);
                 while (true) {
@@ -96,6 +100,7 @@ public:
                     //     *flag then return
                     // }
                 }
+                // }
                 std::cout << "return3 " << i << std::endl;
             };
             this->threads[i].reset(new std::thread(f));

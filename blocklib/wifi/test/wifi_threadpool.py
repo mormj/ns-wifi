@@ -13,6 +13,7 @@ def argParse():
     parser = argparse.ArgumentParser(description=desc)
     
     parser.add_argument("filename")
+    parser.add_argument("--nthreads", type=int, default=1)
 
     return parser.parse_args()
 
@@ -62,7 +63,7 @@ def main():
         # fg.connect(ns, 0, sync_long, 1).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
 
         mtsched = mt.scheduler_mt("mtsched")
-        tpsched = threadpool.scheduler_threadpool("threadpool", num_threads=8)
+        tpsched = threadpool.scheduler_threadpool("threadpool", num_threads=args.nthreads)
           
         fg.add_scheduler(mtsched)
         fg.add_scheduler(tpsched)

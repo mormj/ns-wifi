@@ -68,6 +68,9 @@ private:
 	int packet_cnt = 0;
 	pmt::pmt_t d_pdu = nullptr;
 
+	std::vector<gr_complex> samples_buf;
+	bool new_packet = false;
+
 	void process_symbol(gr_complex *in, gr_complex *symbols, uint8_t *out);
 };
 
