@@ -194,35 +194,71 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     size_t max_index = 0;
                     size_t max_index_2 = 0;
                     float max_value = 0.0;
+                    float max_value_2 = 0.0;
                     gr_complex corr_1;
                     gr_complex corr_2;
 
+                    // for (size_t i = 0; i < host_data.size(); i++) {
+                    //     abs_corr[i] = std::abs(host_data[i]);
+                    //     // std::cout << abs_corr[i];
+                    //     // if (i < host_data.size()-1)
+                    //     // std::cout << ",";
+
+                    //     if (abs_corr[i] > max_value) {
+                    //         max_value_2 = max_value;
+                    //         max_index_2 = max_index;
+                    //         max_value = abs_corr[i];
+                    //         max_index = i;
+                    //     }
+                    //     else if (abs_corr[i] > max_value_2)
+                    //     {
+                    //         max_value_2 = abs_corr[i];
+                    //         max_index_2 = i;
+                    //     }
+                    // }
+                    // std::cout << "abs_corr = [";
                     for (size_t i = 0; i < host_data.size(); i++) {
                         abs_corr[i] = std::abs(host_data[i]);
                         // std::cout << abs_corr[i];
-                        // if (i < host_data.size()-1)
-                        // std::cout << ",";
+                        // if (i < host_data.size() - 1)
+                        //     std::cout << ",";
 
                         if (abs_corr[i] > max_value) {
                             max_value = abs_corr[i];
-                            max_index_2 = max_index;
                             max_index = i;
-                            corr_2 = corr_1;
-                            corr_1 = host_data[i];
+                        }
+                    }
+                    // std::cout << "];" << std::endl;
+                    for (size_t i = 0; i < host_data.size(); i++) {
+                        if (abs_corr[i] > max_value_2 && i != max_index) {
+                            max_value_2 = abs_corr[i];
+                            max_index_2 = i;
                         }
                     }
 
+                    bool valid = false;
                     if (max_index_2 > max_index) {
-                        d_freq_offset =
-                            arg(host_data[max_index] * conj(host_data[max_index_2])) /
-                            (max_index_2 - max_index);
+                        auto diff = max_index_2 - max_index;
+                        if (diff <= 65 && diff >= 63) {
+
+                            d_freq_offset =
+                                arg(host_data[max_index] * conj(host_data[max_index_2])) /
+                                (max_index_2 - max_index);
                             max_index = max_index_2;
+                            valid = true;
+                        }
                     } else {
-                        d_freq_offset =
-                            arg(host_data[max_index_2] * conj(host_data[max_index])) /
-                            (max_index - max_index_2);
+                        auto diff = max_index - max_index_2;
+                        if (diff <= 65 && diff >= 63) {
+                            d_freq_offset =
+                                arg(host_data[max_index_2] * conj(host_data[max_index])) /
+                                (max_index - max_index_2);
+                            valid = true;
+                        }
                     }
 
+                    if (valid)
+                    {
 
                     // size_t max_index = 297;
 
@@ -266,6 +302,8 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     d_state = FINISH_LAST_FRAME;
                     nconsumed = (offset - nread + copy_index + 128);
                     nproduced += 128;
+
+                    }
                     tag_idx++;
 
                 } else {

@@ -126,6 +126,7 @@ private:
 
             return false;
         } else {
+            // std::cout << "crc good" << std::endl;
             crc_cnt++;
             if (crc_cnt % 100 == 0) {
                 std::cout << "crc:" << crc_cnt << std::endl;

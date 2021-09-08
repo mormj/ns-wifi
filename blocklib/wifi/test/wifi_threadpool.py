@@ -39,11 +39,11 @@ def main():
     if 1: # through sync_short
         src = fileio.file_source(gr.sizeof_gr_complex, args.filename, False)
         pre_sync = wifi.pre_sync(48,1024*1024*2, impl=wifi.pre_sync.cuda)
-        sync_short = wifi.sync_short(0.56, 2, True, False, impl=wifi.sync_short.cuda)
+        sync_short = wifi.sync_short(0.56, 8, True, False, impl=wifi.sync_short.cuda)
         sync_long = wifi.sync_long(sync_length, True, False, impl=wifi.sync_long.cuda)
         fft_blk = fft.fft_cc_fwd(64, np.ones(64), True, impl=fft.fft_cc_fwd.cuda)
         # fft_blk = fft.fft_cc_fwd(64, np.ones(64), True, impl=fft.fft_cc_fwd.cpu)
-        packetize = wifi.packetize_frame(0,2412e6,20e6,False, False, impl=wifi.packetize_frame.cpu)
+        packetize = wifi.packetize_frame(0,2462e6,20e6,False, False, impl=wifi.packetize_frame.cpu)
         decode = wifi.decode_packetized(False, False)
 
         buf_size = 2048*1024
