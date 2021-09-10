@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from newsched import gr, blocks, streamops, fileio, math, wifi, filter, fft
-from newsched.schedulers import mt, threadpool
+from newsched.schedulers import nbt, threadpool
 import numpy as np
 import argparse
 import time
@@ -62,13 +62,13 @@ def main():
         fg.connect(packetize, "pdus", decode, "pdus")
         # fg.connect(ns, 0, sync_long, 1).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
 
-        mtsched = mt.scheduler_mt("mtsched")
+        nbtsched = nbt.scheduler_nbt("nbtsched")
         tpsched = threadpool.scheduler_threadpool("threadpool", num_threads=args.nthreads)
           
-        fg.add_scheduler(mtsched)
+        fg.add_scheduler(nbtsched)
         fg.add_scheduler(tpsched)
 
-        dconf = [ gr.domain_conf(mtsched, [ src, pre_sync, sync_short, sync_long, fft_blk, packetize ]),
+        dconf = [ gr.domain_conf(nbtsched, [ src, pre_sync, sync_short, sync_long, fft_blk, packetize ]),
                   gr.domain_conf(tpsched, [ decode ]) ]
 
         fg.partition(dconf)
