@@ -24,6 +24,27 @@ extern void exec_remove_cp(cuFloatComplex* in,
                            int grid_size,
                            int block_size,
                            cudaStream_t stream);
+                           
+
+extern void exec_remove_cp_freqcorr(cuFloatComplex* in,
+    cuFloatComplex* out,
+    int symlen,
+    int cplen,
+    int n,
+    int grid_size,
+    int block_size,
+    float freqoff,
+    int start_sym,
+    cudaStream_t stream);
+
+extern void exec_freq_correction(cuFloatComplex* in,
+                                 cuFloatComplex* out,
+                                 float freq_offset,
+                                 float start_idx,
+                                 int n,
+                                 int grid_size,
+                                 int block_size,
+                                 cudaStream_t stream);
 
 namespace gr {
 namespace wifi {
@@ -135,13 +156,26 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
             auto nsyms = std::min(max_consume / 80, max_produce / 64);
             auto gridSize = (80 * nsyms + d_block_size - 1) / d_block_size;
-            exec_remove_cp((cuFloatComplex*)in + nconsumed,
+            // exec_remove_cp((cuFloatComplex*)in + nconsumed,
+            //                (cuFloatComplex*)out + nproduced,
+            //                80,
+            //                16,
+            //                80 * nsyms,
+            //                gridSize,
+            //                d_block_size,
+            //                d_stream);
+            // // cudaStreamSynchronize(d_stream);
+
+
+            exec_remove_cp_freqcorr((cuFloatComplex*)in + nconsumed,
                            (cuFloatComplex*)out + nproduced,
                            80,
                            16,
                            80 * nsyms,
                            gridSize,
                            d_block_size,
+                           d_freq_offset,
+                           d_offset,
                            d_stream);
             // cudaStreamSynchronize(d_stream);
 
@@ -150,6 +184,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
             nconsumed += i;
             nproduced += o;
 
+            d_offset += i;
 
         } else { // WAITING_FOR_TAG
 
@@ -269,20 +304,51 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                         copy_index = max_index - 160 + 32 + 1;
                     }
 
-                    // gr_complex tmp[128];
 
-                    checkCudaErrors(cudaMemcpyAsync(out + nproduced,
-                                                    in + (offset - nread + copy_index),
-                                                    sizeof(gr_complex) * 128,
-                                                    cudaMemcpyDeviceToDevice,
-                                                    d_stream));
+                    // checkCudaErrors(cudaMemcpyAsync(out + nproduced,
+                    //                                 in + (offset - nread + copy_index),
+                    //                                 sizeof(gr_complex) * 128,
+                    //                                 cudaMemcpyDeviceToDevice,
+                    //                                 d_stream));
+
+                    exec_freq_correction((cuFloatComplex*)in + (offset - nread + copy_index),
+                                                    (cuFloatComplex*)out + nproduced,
+                                                    -d_freq_offset, // it gets negated in the kernel
+                                                    0,
+                                                    128,
+                                                    1,
+                                                    128,
+                                                    d_stream);
+                    cudaStreamSynchronize(d_stream);
+                gr_complex host_in[128];
+                gr_complex host_out[128];
+                cudaMemcpy(host_in, in + (offset - nread + copy_index), 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
+                cudaMemcpy(host_out, out + nproduced, 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
+                FILE *pFile;
+                pFile = fopen("/tmp/sync_long_freqcorrect.dat", "w");
+                fprintf(pFile, "x = [");
+                for (int i=0; i<128; i++)
+                {
+                    fprintf(pFile, "%.6f+%.6fj,", real(host_out[i]), imag(host_out[i]));
+                }
+                fprintf(pFile, "];\n");
+                fprintf(pFile, "y = [");
+                for (int i=0; i<128; i++)
+                {
+                    fprintf(pFile, "%.6f+%.6fj,", real(host_in[i]), imag(host_in[i]));
+                }
+                fprintf(pFile, "];\n");
+                // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                fclose(pFile);
+
+                    d_offset = 160;
 
                     // checkCudaErrors(cudaMemcpyAsync(tmp,
                     //                                 in + (offset - nread + copy_index),
                     //                                 sizeof(gr_complex) * 128,
                     //                                 cudaMemcpyDeviceToHost,
                     //                                 d_stream));
-                    cudaStreamSynchronize(d_stream);
+                   
 
 
                     const pmt::pmt_t key = pmt::string_to_symbol("wifi_start");

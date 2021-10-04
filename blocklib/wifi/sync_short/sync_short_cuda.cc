@@ -5,9 +5,14 @@
 static const int MIN_GAP = 480;
 static const int MAX_SAMPLES = 540 * 80;
 
-extern void exec_freq_correction(cuFloatComplex *in, cuFloatComplex *out, float freq_offset,
-                          float start_idx, int n, int grid_size, int block_size,
-                          cudaStream_t stream);
+extern void exec_freq_correction(cuFloatComplex* in,
+                                 cuFloatComplex* out,
+                                 float freq_offset,
+                                 float start_idx,
+                                 int n,
+                                 int grid_size,
+                                 int block_size,
+                                 cudaStream_t stream);
 
 namespace gr {
 namespace wifi {
@@ -36,7 +41,7 @@ sync_short_cuda::sync_short_cuda(const sync_short::block_args& args)
 }
 
 work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_input,
-                                              std::vector<block_work_output>& work_output)
+                                         std::vector<block_work_output>& work_output)
 {
     const gr_complex* in = (const gr_complex*)work_input[0].items();
     const gr_complex* in_abs = (const gr_complex*)work_input[1].items();
@@ -47,26 +52,26 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
     int ninput = std::min(std::min(work_input[0].n_items, work_input[1].n_items),
                           work_input[2].n_items);
 
-    noutput = std::min(ninput,noutput);
+    noutput = std::min(ninput, noutput);
 
     int h = d_min_plateau - 1; // index of first real sample
     if (noutput > above_threshold.size()) {
         above_threshold.resize(noutput + h);
         accum.resize(noutput);
-        d_host_cor.resize(noutput+h);
-        d_host_abs.resize(noutput+h);
+        d_host_cor.resize(noutput + h);
+        d_host_abs.resize(noutput + h);
     }
 
 
     // Copy D2H in_cor to host
     checkCudaErrors(cudaMemcpyAsync(d_host_cor.data(),
                                     in_cor,
-                                    sizeof(float) * (noutput+h),
+                                    sizeof(float) * (noutput + h),
                                     cudaMemcpyDeviceToHost,
                                     d_stream));
     checkCudaErrors(cudaMemcpyAsync(d_host_abs.data(),
                                     in_abs,
-                                    sizeof(gr_complex) * (noutput+h),
+                                    sizeof(gr_complex) * (noutput + h),
                                     cudaMemcpyDeviceToHost,
                                     d_stream));
     cudaStreamSynchronize(d_stream);
@@ -96,11 +101,10 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
                 d_last_tag_location = nread + i;
                 d_freq_offset = arg(d_host_abs[i]) / 16;
                 insert_tag(nwritten + i, d_freq_offset, nread + i, work_output[0]);
-        packet_cnt++;
-        if (packet_cnt % 1000 == 0)
-        {
-          std::cout << "sync_short: " << packet_cnt << std::endl;
-        }
+                packet_cnt++;
+                if (packet_cnt % 1000 == 0) {
+                    std::cout << "sync_short: " << packet_cnt << std::endl;
+                }
             }
 
         } else {
@@ -108,9 +112,12 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
         }
     }
 
+    gr_complex host_in[160];
+    cudaMemcpy(host_in, in+h, 160*sizeof(gr_complex), cudaMemcpyDeviceToHost);
+
     auto gridSize = (noutput + d_block_size - 1) / d_block_size;
-    exec_freq_correction((cuFloatComplex *)in+h,
-                         (cuFloatComplex *)out,
+    exec_freq_correction((cuFloatComplex*)in + h,
+                         (cuFloatComplex*)out,
                          d_freq_offset,
                          nwritten,
                          noutput,
@@ -132,7 +139,6 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
 
     // Tell runtime system how many output items we produced.
     return work_return_code_t::WORK_OK;
-
 }
 
 

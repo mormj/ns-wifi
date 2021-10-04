@@ -16,7 +16,10 @@ wifi_sources += ['equalizer/base.cc',
 # This is ugly, and there HAS to be a better way to bring in dependencies
 link_args = ['-lnewsched-pmt','-lnewsched-runtime', '-lnewsched-blocklib-digital', '-lnewsched-blocklib-filter', '-lnewsched-blocklib-fft', '-lnewsched-blocklib-blocks']
 block_cpp_args = ['-DHAVE_CPU']
-if cuda_dep.found() and get_option('enable_cuda')
+
+wifi_cu_sources += ['freq_correction.cu']
+
+if cuda_dep.found() #and get_option('enable_cuda')
      block_cpp_args += '-DHAVE_CUDA'
 
     newsched_blocklib_wifi_cu = library('newsched-blocklib-wifi-cu', 

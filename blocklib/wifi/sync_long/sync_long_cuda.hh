@@ -46,6 +46,8 @@ private:
     int ntags = 0;
 
     size_t packet_cnt = 0;
+
+    int         d_offset = 0;
 };
 
 } // namespace wifi

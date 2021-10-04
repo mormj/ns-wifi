@@ -3,7 +3,7 @@ yml_file = 'sync_short.yml'
 sync_short_files = files(['sync_short_cpu.cc'])
 
 if cuda_dep.found() and get_option('enable_cuda')
-    wifi_cu_sources += files('freq_correction.cu')
+    # wifi_cu_sources += files('freq_correction.cu')
     sync_short_files += files(['sync_short_cuda.cc'])
 endif
 

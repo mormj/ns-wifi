@@ -39,7 +39,7 @@ def main():
     if 1: # through sync_short
         src = fileio.file_source(gr.sizeof_gr_complex, args.filename, False)
         pre_sync = wifi.pre_sync(48,1024*1024*2, impl=wifi.pre_sync.cuda)
-        sync_short = wifi.sync_short(0.56, 8, True, False, impl=wifi.sync_short.cuda)
+        sync_short = wifi.sync_short(0.56, 2, True, False, impl=wifi.sync_short.cuda)
         sync_long = wifi.sync_long(sync_length, True, False, impl=wifi.sync_long.cuda)
         fft_blk = fft.fft_cc_fwd(64, np.ones(64), True, impl=fft.fft_cc_fwd.cuda)
         # fft_blk = fft.fft_cc_fwd(64, np.ones(64), True, impl=fft.fft_cc_fwd.cpu)
@@ -72,7 +72,42 @@ def main():
                   gr.domain_conf(tpsched, [ decode ]) ]
 
         fg.partition(dconf)
+    else: # through sync_short
+        src = fileio.file_source(gr.sizeof_gr_complex, args.filename, False)
+        pre_sync = wifi.pre_sync(48,1024*1024*2, impl=wifi.pre_sync.cuda)
+        sync_short = wifi.sync_short(0.56, 8, True, False, impl=wifi.sync_short.cuda)
+        sync_long = wifi.sync_long(sync_length, True, False, impl=wifi.sync_long.cpu)
+        fft_blk = fft.fft_cc_fwd(64, np.ones(64), True, impl=fft.fft_cc_fwd.cpu)
+        # fft_blk = fft.fft_cc_fwd(64, np.ones(64), True, impl=fft.fft_cc_fwd.cpu)
+        packetize = wifi.packetize_frame(0,2462e6,20e6,False, False, impl=wifi.packetize_frame.cpu)
+        decode = wifi.decode_packetized(False, False)
 
+        buf_size = 2048*1024
+        # fg.connect(src,0,hd,0)
+        fg.connect(src, 0, pre_sync, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.H2D).set_buffer_size(buf_size))
+        fg.connect(pre_sync, 0, sync_short, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2D).set_buffer_size(buf_size))
+        fg.connect(pre_sync, 1, sync_short, 1).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2D).set_buffer_size(buf_size))
+        fg.connect(pre_sync, 2, sync_short, 2).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2D).set_buffer_size(buf_size))
+        # fg.connect(sync_short, 0, snk, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
+        # fg.connect(sync_long, 0, snk, 0)
+        fg.connect(sync_short, 0, sync_long, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
+        fg.connect(sync_long, 0, fft_blk, 0).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
+        # fg.connect(sync_long, 0, fft_blk, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
+        fg.connect(fft_blk, 0, packetize, 0).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
+        # fg.connect(fft_blk, 0, packetize, 0).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
+        fg.connect(packetize, "pdus", decode, "pdus")
+        # fg.connect(ns, 0, sync_long, 1).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
+
+        nbtsched = nbt.scheduler_nbt("nbtsched")
+        tpsched = threadpool.scheduler_threadpool("threadpool", num_threads=args.nthreads)
+          
+        fg.add_scheduler(nbtsched)
+        fg.add_scheduler(tpsched)
+
+        dconf = [ gr.domain_conf(nbtsched, [ src, pre_sync, sync_short, sync_long, fft_blk, packetize ]),
+                  gr.domain_conf(tpsched, [ decode ]) ]
+
+        fg.partition(dconf)
 
     def sig_handler(sig=None, frame=None):
         fg.stop()
