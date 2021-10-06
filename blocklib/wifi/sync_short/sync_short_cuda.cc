@@ -23,7 +23,7 @@ sync_short::sptr sync_short::make_cuda(const block_args& args)
 }
 
 sync_short_cuda::sync_short_cuda(const sync_short::block_args& args)
-    : sync_short(args),
+    : block("sync_short_cuda"), sync_short(args),
       d_log(args.log),
       d_debug(args.debug),
       d_min_plateau(args.min_plateau),
@@ -100,6 +100,8 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
             if (accum[i] >= d_min_plateau && nread + i - d_last_tag_location > MIN_GAP) {
                 d_last_tag_location = nread + i;
                 d_freq_offset = arg(d_host_abs[i]) / 16;
+                d_freq_offset = -.00298627;
+                // std::cout << "SHORT Frame at " << nwritten + i << std::endl;
                 insert_tag(nwritten + i, d_freq_offset, nread + i, work_output[0]);
                 packet_cnt++;
                 if (packet_cnt % 1000 == 0) {

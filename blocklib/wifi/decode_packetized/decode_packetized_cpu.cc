@@ -13,7 +13,7 @@ decode_packetized::sptr decode_packetized::make_cpu(const block_args& args)
 }
 
 decode_packetized_cpu::decode_packetized_cpu(const decode_packetized::block_args& args)
-    : decode_packetized(args),
+    : block("decode_packetized_cpu"), decode_packetized(args),
 	d_log(args.log),
 	d_debug(args.debug),
 	d_frame(d_ofdm, 0)

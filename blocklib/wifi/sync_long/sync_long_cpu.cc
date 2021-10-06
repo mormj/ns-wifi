@@ -14,7 +14,7 @@ sync_long::sptr sync_long::make_cpu(const block_args& args)
 }
 
 sync_long_cpu::sync_long_cpu(const sync_long::block_args& args)
-    : sync_long(args),
+    : block("sync_long_cpu"), sync_long(args),
       d_log(args.log),
       d_debug(args.debug),
       SYNC_LENGTH(args.sync_length),

@@ -19,11 +19,11 @@ namespace wifi {
 
 pre_sync::sptr pre_sync::make_cuda(const block_args& args)
 {
-    return std::make_shared<pre_sync_cpu>(args);
+    return std::make_shared<pre_sync_cuda>(args);
 }
 
-pre_sync_cpu::pre_sync_cpu(const pre_sync::block_args& args)
-    : pre_sync(args), d_buffer_size(args.buffer_size), d_window_size(args.window_size)
+pre_sync_cuda::pre_sync_cuda(const pre_sync::block_args& args)
+    : block("pre_sync_cuda"), pre_sync(args), d_buffer_size(args.buffer_size), d_window_size(args.window_size)
 {
     cudaStreamCreate(&d_stream);
 
@@ -37,7 +37,7 @@ pre_sync_cpu::pre_sync_cpu(const pre_sync::block_args& args)
     checkCudaErrors(cudaMalloc((void**)&dev_buf_8, d_buffer_size));
 }
 
-work_return_code_t pre_sync_cpu::work(std::vector<block_work_input>& work_input,
+work_return_code_t pre_sync_cuda::work(std::vector<block_work_input>& work_input,
                                            std::vector<block_work_output>& work_output)
 {
     const gr_complex* in = (const gr_complex*)work_input[0].items();

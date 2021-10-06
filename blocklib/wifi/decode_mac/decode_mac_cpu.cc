@@ -13,7 +13,7 @@ decode_mac::sptr decode_mac::make_cpu(const block_args& args)
 }
 
 decode_mac_cpu::decode_mac_cpu(const decode_mac::block_args& args)
-    : decode_mac(args),
+    : block("decode_mac_cpu"), decode_mac(args),
 	d_log(args.log),
 	d_debug(args.debug),
 	d_frame(d_ofdm, 0)

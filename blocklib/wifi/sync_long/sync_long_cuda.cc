@@ -55,7 +55,7 @@ sync_long::sptr sync_long::make_cuda(const block_args& args)
 }
 
 sync_long_cuda::sync_long_cuda(const sync_long::block_args& args)
-    : sync_long(args), d_log(args.log), d_debug(args.debug)
+    : block("sync_long_cuda"), sync_long(args), d_log(args.log), d_debug(args.debug)
 {
     cudaStreamCreate(&d_stream);
 
@@ -174,7 +174,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                            80 * nsyms,
                            gridSize,
                            d_block_size,
-                           d_freq_offset,
+                           -d_freq_offset,
                            d_offset,
                            d_stream);
             // cudaStreamSynchronize(d_stream);
@@ -278,7 +278,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
                             d_freq_offset =
                                 arg(host_data[max_index] * conj(host_data[max_index_2])) /
-                                (max_index_2 - max_index);
+                                (max_index_2 - max_index) ;
                             max_index = max_index_2;
                             valid = true;
                         }
@@ -287,14 +287,15 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                         if (diff <= 65 && diff >= 63) {
                             d_freq_offset =
                                 arg(host_data[max_index_2] * conj(host_data[max_index])) /
-                                (max_index - max_index_2);
+                                (max_index - max_index_2) ;
+                            
                             valid = true;
                         }
                     }
 
                     if (valid)
                     {
-
+                            // d_freq_offset = -.00248403;
                     // size_t max_index = 297;
 
                     // Copy the LTF symbols
@@ -303,6 +304,10 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     if (max_index > (160 - 32 - 1)) {
                         copy_index = max_index - 160 + 32 + 1;
                     }
+                    // if (max_index > (160 - 1)) {
+                    //     copy_index = max_index - 160 + 1;
+                    // }
+                    
 
 
                     // checkCudaErrors(cudaMemcpyAsync(out + nproduced,
@@ -325,7 +330,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                 cudaMemcpy(host_in, in + (offset - nread + copy_index), 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
                 cudaMemcpy(host_out, out + nproduced, 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
                 FILE *pFile;
-                pFile = fopen("/tmp/sync_long_freqcorrect.dat", "w");
+                pFile = fopen("/tmp/sync_long_freqcorrect.m", "w");
                 fprintf(pFile, "x = [");
                 for (int i=0; i<128; i++)
                 {

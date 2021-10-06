@@ -224,8 +224,8 @@ private:
     void equalize_frame(const gr_complex* symbols, uint8_t* demapped_symbols)
     {
 
-        double d_freq_offset_from_synclong = d_freq_offset * d_bw / (2 * M_PI);
-        double d_epsilon0 = d_freq_offset * d_bw / (2 * M_PI * d_freq);
+        // double d_freq_offset_from_synclong = d_freq_offset * d_bw / (2 * M_PI);
+        double d_epsilon0 = d_freq_offset / d_freq;
         double d_er = 0.0;
 
         static gr_complex current_symbol[64];

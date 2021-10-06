@@ -14,10 +14,10 @@
 namespace gr {
 namespace wifi {
 
-class pre_sync_cpu : public pre_sync
+class pre_sync_cuda : public pre_sync
 {
 public:
-    pre_sync_cpu(const block_args& args);
+    pre_sync_cuda(const block_args& args);
     virtual work_return_code_t work(std::vector<block_work_input>& work_input,
                                     std::vector<block_work_output>& work_output) override;
 

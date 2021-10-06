@@ -12,7 +12,7 @@ sync_short::sptr sync_short::make_cpu(const block_args& args)
 }
 
 sync_short_cpu::sync_short_cpu(const sync_short::block_args& args)
-    : sync_short(args),
+    : block("sync_short_cpu"), sync_short(args),
       d_log(args.log),
       d_debug(args.debug),
       MIN_PLATEAU(args.min_plateau),

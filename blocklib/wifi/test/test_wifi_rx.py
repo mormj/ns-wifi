@@ -232,10 +232,12 @@ def main():
         sync_short = wifi.sync_short(0.56, 2, True, False, impl=wifi.sync_short.cuda)
         sync_long = wifi.sync_long(sync_length, True, False, impl=wifi.sync_long.cuda)
         # ns = blocks.null_source(gr.sizeof_gr_complex)
+        hd = blocks.head(64 * gr.sizeof_gr_complex, 1000000 // 64)
 
-        # snk = fileio.file_sink(gr.sizeof_gr_complex, "/tmp/wifi_out.fc32")
+        snk1 = fileio.file_sink(gr.sizeof_gr_complex, "/tmp/ns_sync_short.fc32")
+        snk2 = fileio.file_sink(64 * gr.sizeof_gr_complex, "/tmp/ns_sync_long.fc32")
         # snk = blocks.null_sink(gr.sizeof_gr_complex)
-        snk = blocks.null_sink(64*gr.sizeof_gr_complex)
+        # snk = blocks.null_sink(64*gr.sizeof_gr_complex)
 
         buf_size = 2048*1024
         # fg.connect(src,0,hd,0)
@@ -245,8 +247,10 @@ def main():
         fg.connect(pre_sync, 2, sync_short, 2).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2D).set_buffer_size(buf_size))
         # fg.connect(sync_short, 0, snk, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
         # fg.connect(sync_long, 0, snk, 0)
+        fg.connect(sync_short, 0, snk1, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
         fg.connect(sync_short, 0, sync_long, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2D).set_buffer_size(buf_size))
-        fg.connect(sync_long, 0, snk, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
+        fg.connect(sync_long, 0, hd, 0).set_custom_buffer(gr.buffer_cuda_properties.make(gr.buffer_cuda_type.D2H).set_buffer_size(buf_size))
+        fg.connect(hd, 0, snk2, 0)
         # fg.connect(ns, 0, sync_long, 1).set_custom_buffer(gr.buffer_cpu_vmcirc_properties.make(gr.buffer_cpu_vmcirc_type.AUTO).set_buffer_size(buf_size))
     elif 0:
         src = fileio.file_source(gr.sizeof_gr_complex, args.filename, False)

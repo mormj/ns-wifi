@@ -17,7 +17,7 @@ frame_equalizer::sptr frame_equalizer::make_cpu(const block_args& args)
 }
 
 frame_equalizer_cpu::frame_equalizer_cpu(const frame_equalizer::block_args& args)
-    : frame_equalizer(args),
+    : block("frame_equalizer_cpu"), frame_equalizer(args),
 	d_log(args.log), d_debug(args.debug),
 	d_freq(args.freq), d_bw(args.bw)
 {
