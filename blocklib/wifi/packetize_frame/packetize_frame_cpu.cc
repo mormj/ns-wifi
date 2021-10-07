@@ -197,16 +197,16 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                     // std::cout << "publish frame" << std::endl;
                     get_message_port("pdus")->post(pdu);
                     // d_pdu = nullptr;
-                    FILE *pFile;
-                    pFile = fopen("/tmp/ns_packetize.dat", "a");
-                    fprintf(pFile, "%d,", packet_cnt);
-                    for (int i=0; i<64*23; i++)
-                    {
-                        fprintf(pFile, "%.6f+%.6f,", real(samples_buf[i]), imag(samples_buf[i]));
-                    }
-                    fprintf(pFile, "\n");
-                    // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                    fclose(pFile);
+                    // FILE *pFile;
+                    // pFile = fopen("/tmp/ns_packetize.dat", "a");
+                    // fprintf(pFile, "%d,", packet_cnt);
+                    // for (int i=0; i<64*23; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(samples_buf[i]), imag(samples_buf[i]));
+                    // }
+                    // fprintf(pFile, "\n");
+                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                    // fclose(pFile);
                     packet_cnt++;
                         
                         if (packet_cnt % 1000 == 0)
@@ -247,16 +247,16 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                 if (decode_signal_field(signal_field)) {
 
 
-                    FILE *pFile;
-                    pFile = fopen("/tmp/ns_signal_field.m", "w");
-                    fprintf(pFile, "sf2 = [");
-                    for (int i=0; i<64; i++)
-                    {
-                        fprintf(pFile, "%.6f+%.6fj,", real(symbols[i]), imag(symbols[i]));
-                    }
-                    fprintf(pFile, "];\n");
-                    // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                    fclose(pFile);
+                    // FILE *pFile;
+                    // pFile = fopen("/tmp/ns_signal_field.m", "w");
+                    // fprintf(pFile, "sf2 = [");
+                    // for (int i=0; i<64; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6fj,", real(symbols[i]), imag(symbols[i]));
+                    // }
+                    // fprintf(pFile, "];\n");
+                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                    // fclose(pFile);
 
                     // check for maximum frame size
                     if (d_frame_symbols > MAX_SYM || d_frame_bytes > MAX_PSDU_SIZE) {

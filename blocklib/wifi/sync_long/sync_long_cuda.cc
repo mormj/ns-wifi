@@ -329,22 +329,22 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                 gr_complex host_out[128];
                 cudaMemcpy(host_in, in + (offset - nread + copy_index), 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
                 cudaMemcpy(host_out, out + nproduced, 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
-                FILE *pFile;
-                pFile = fopen("/tmp/sync_long_freqcorrect.m", "w");
-                fprintf(pFile, "x = [");
-                for (int i=0; i<128; i++)
-                {
-                    fprintf(pFile, "%.6f+%.6fj,", real(host_out[i]), imag(host_out[i]));
-                }
-                fprintf(pFile, "];\n");
-                fprintf(pFile, "y = [");
-                for (int i=0; i<128; i++)
-                {
-                    fprintf(pFile, "%.6f+%.6fj,", real(host_in[i]), imag(host_in[i]));
-                }
-                fprintf(pFile, "];\n");
-                // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                fclose(pFile);
+                // FILE *pFile;
+                // pFile = fopen("/tmp/sync_long_freqcorrect.m", "w");
+                // fprintf(pFile, "x = [");
+                // for (int i=0; i<128; i++)
+                // {
+                //     fprintf(pFile, "%.6f+%.6fj,", real(host_out[i]), imag(host_out[i]));
+                // }
+                // fprintf(pFile, "];\n");
+                // fprintf(pFile, "y = [");
+                // for (int i=0; i<128; i++)
+                // {
+                //     fprintf(pFile, "%.6f+%.6fj,", real(host_in[i]), imag(host_in[i]));
+                // }
+                // fprintf(pFile, "];\n");
+                // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                // fclose(pFile);
 
                     d_offset = 160;
 

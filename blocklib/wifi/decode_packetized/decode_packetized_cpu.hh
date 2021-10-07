@@ -30,6 +30,10 @@ class decode_packetized_cpu : public decode_packetized, public clonable_block
 {
 public:
     decode_packetized_cpu(const block_args& args);
+    ~decode_packetized_cpu()
+    {
+        std::cout << "crc:" << crc_cnt << std::endl;
+    }
     virtual work_return_code_t work(std::vector<block_work_input>& work_input,
                                     std::vector<block_work_output>& work_output) override;
 
@@ -128,7 +132,7 @@ private:
         } else {
             // std::cout << "crc good" << std::endl;
             crc_cnt++;
-            if (crc_cnt % 100 == 0) {
+            if (crc_cnt % 10 == 0) {
                 std::cout << "crc:" << crc_cnt << std::endl;
             }
         }
