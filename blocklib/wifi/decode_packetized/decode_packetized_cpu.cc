@@ -114,22 +114,72 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
     if (!decode(d_rx_bits, d_rx_symbols, d_deinterleaved_bits, out_bytes, d_decoder,
            d_frame, d_ofdm))
            {
-                    FILE *pFile;
-                    char tmp[1024];
-                    sprintf(tmp,"/tmp/decode_%d.dat", this->id());
-                    pFile = fopen(tmp, "a");
-                    fprintf(pFile, "%d,%d,", pc, d_frame_encoding);
-                    // for (int i=0; i<64*23; i++)
+                    // FILE *pFile;
+                    // char tmp[1024];
+                    // sprintf(tmp,"/tmp/decode_%d.dat", this->id());
+                    // pFile = fopen(tmp, "a");
+                    // fprintf(pFile, "x,%d,%d,%d,%d,%.1f,%.1f,%.6f,%d,", pc, d_frame_encoding, d_frame_bytes, d_frame_symbols, d_bw, d_freq, d_freq_offset, len_bytes);
+                    // // for (int i=0; i<64*23; i++)
+                    // // {
+                    // //     fprintf(pFile, "%.6f+%.6f,", real(samples[i]), imag(samples[i]));
+                    // // }
+                    // for (int i=0; i<64; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(H[i]), imag(H[i]));
+                    // }
+                    // for (int i=0; i<4; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(d_prev_pilots[i]), imag(d_prev_pilots[i]));
+                    // }
+                    // fprintf(pFile, "\n");
+                    // for (int i=0; i<d_frame_symbols*64; i++)
                     // {
                     //     fprintf(pFile, "%.6f+%.6f,", real(samples[i]), imag(samples[i]));
                     // }
-                    for (int i=0; i<64; i++)
-                    {
-                        fprintf(pFile, "%.6f+%.6f,", real(H[i]), imag(H[i]));
-                    }
-                    fprintf(pFile, "\n");
-                    // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                    fclose(pFile);
+                    // fprintf(pFile, "\n");
+                    // for (int i=0; i<d_frame.n_sym*48; i++)
+                    // {
+                    //     fprintf(pFile, "%d,", d_rx_symbols[i]);
+                    // }
+                    // fprintf(pFile, "\n");
+
+                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                    // fclose(pFile);
+           }
+           else
+           {
+
+                    // FILE *pFile;
+                    // char tmp[1024];
+                    // sprintf(tmp,"/tmp/decode_%d.dat", this->id());
+                    // pFile = fopen(tmp, "a");
+                    // fprintf(pFile, "o,%d,%d,%d,%d,%.1f,%.1f,%.6f,%d,", pc, d_frame_encoding, d_frame_bytes, d_frame_symbols, d_bw, d_freq, d_freq_offset, len_bytes);
+                    // // for (int i=0; i<64*23; i++)
+                    // // {
+                    // //     fprintf(pFile, "%.6f+%.6f,", real(samples[i]), imag(samples[i]));
+                    // // }
+                    // for (int i=0; i<64; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(H[i]), imag(H[i]));
+                    // }
+                    // for (int i=0; i<4; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(d_prev_pilots[i]), imag(d_prev_pilots[i]));
+                    // }
+                    // fprintf(pFile, "\n");
+                    // for (int i=0; i<d_frame_symbols*64; i++)
+                    // {
+                    //     fprintf(pFile, "%.6f+%.6f,", real(samples[i]), imag(samples[i]));
+                    // }
+                    // fprintf(pFile, "\n");
+                    // for (int i=0; i<d_frame.n_sym*48; i++)
+                    // {
+                    //     fprintf(pFile, "%d,", d_rx_symbols[i]);
+                    // }
+                    // fprintf(pFile, "\n");
+
+                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
+                    // fclose(pFile);
            }
 
     // Insert MAC Decode code here

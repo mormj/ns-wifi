@@ -232,20 +232,21 @@ private:
         double d_epsilon0 = d_freq_offset / d_freq;
         double d_er = 0.0;
 
-        static gr_complex current_symbol[64];
-        static gr_complex tmp_symbols[48];
+        gr_complex current_symbol[64];
+        gr_complex tmp_symbols[48];
 
         for (size_t i = 0; i < d_frame_symbols; i++) {
             size_t d_current_symbol = i + 3;
-
+            // gr_complex *current_symbol = symbols + i * 64;
             std::memcpy(current_symbol, symbols + i * 64, 64 * sizeof(gr_complex));
 
             // compensate sampling offset
-            for (int i = 0; i < 64; i++) {
-                current_symbol[i] *=
+            for (int j = 0; j < 64; j++) {
+                current_symbol[j] *=
+                // symbols[i*64+j] *=
                     exp(gr_complex(0,
                                    2 * M_PI * d_current_symbol * 80 *
-                                       (d_epsilon0 + d_er) * (i - 32) / 64));
+                                       (d_epsilon0 + d_er) * (j - 32) / 64));
             }
 
             gr_complex p = equalizer::base::POLARITY[(d_current_symbol - 2) % 127];

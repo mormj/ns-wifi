@@ -365,7 +365,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     // std::endl;
                     //   add_item_tag(0, nwritten + nproduced, key, value, srcid);
                     packet_cnt++;
-                    if (packet_cnt % 1000 == 0) {
+                    if (packet_cnt % 10 == 0) {
                         std::cout << "sync_long: " << packet_cnt << std::endl;
                     }
 
