@@ -31,7 +31,7 @@ thread_wrapper::thread_wrapper(int id,
 
     std::vector<message_func_t> cb_funcs;
     std::vector<block_sptr> copied_blocks(tpp.num_threads);
-    for (int i=0; i<tpp.num_threads; i++)
+    for (size_t i=0; i<tpp.num_threads; i++)
     {
         auto newblock = clonable->clone();
         auto lambda = [this, newblock](pmt::pmt_t msg) 

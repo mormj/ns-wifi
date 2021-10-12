@@ -29,8 +29,8 @@ private:
 	equalizer::base *d_equalizer = nullptr;
 	std::mutex d_mutex;
 	std::vector<gr::tag_t> tags;
-	bool d_debug;
 	bool d_log;
+	bool d_debug;
 	int  d_current_symbol = 0;
 	viterbi_decoder d_decoder;
 

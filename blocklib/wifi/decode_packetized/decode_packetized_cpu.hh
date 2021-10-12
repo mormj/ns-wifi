@@ -46,8 +46,8 @@ private:
     void descramble(uint8_t* decoded_bits);
     void print_output();
 
-    bool d_debug;
     bool d_log;
+    bool d_debug;
 
     ofdm_param d_ofdm = BPSK_1_2;
     frame_param d_frame;
@@ -169,8 +169,7 @@ private:
             second[i] = 16 * i - (n_cbps - 1) * int(floor(16.0 * i / n_cbps));
         }
 
-        int count = 0;
-        for (int i = 0; i < n_sym; i++) {
+        for (size_t i = 0; i < n_sym; i++) {
             for (int k = 0; k < n_cbps; k++) {
                 deinterleaved_bits[i * n_cbps + second[first[k]]] =
                     rx_bits[i * n_cbps + k];
@@ -194,7 +193,7 @@ private:
         int feedback;
         int bit;
 
-        for (int i = 7; i < psdu_size * 8 + 16; i++) {
+        for (size_t i = 7; i < psdu_size * 8 + 16; i++) {
             feedback = ((!!(state & 64))) ^ (!!(state & 8));
             bit = feedback ^ (decoded_bits[i] & 0x1);
             out_bytes[i / 8] |= bit << (i % 8);
@@ -207,7 +206,7 @@ private:
 
         dout << std::endl;
         dout << "psdu size" << psdu_size << std::endl;
-        for (int i = 2; i < psdu_size + 2; i++) {
+        for (size_t i = 2; i < psdu_size + 2; i++) {
             dout << std::setfill('0') << std::setw(2) << std::hex
                  << ((unsigned int)out_bytes[i] & 0xFF) << std::dec << " ";
             if (i % 16 == 15) {
@@ -215,7 +214,7 @@ private:
             }
         }
         dout << std::endl;
-        for (int i = 2; i < psdu_size + 2; i++) {
+        for (size_t i = 2; i < psdu_size + 2; i++) {
             if ((out_bytes[i] > 31) && (out_bytes[i] < 127)) {
                 dout << ((char)out_bytes[i]);
             } else {
@@ -235,7 +234,7 @@ private:
         gr_complex current_symbol[64];
         gr_complex tmp_symbols[48];
 
-        for (size_t i = 0; i < d_frame_symbols; i++) {
+        for (int i = 0; i < d_frame_symbols; i++) {
             size_t d_current_symbol = i + 3;
             // gr_complex *current_symbol = symbols + i * 64;
             std::memcpy(current_symbol, symbols + i * 64, 64 * sizeof(gr_complex));
@@ -299,8 +298,6 @@ private:
                                   demapped_symbols + i * 48,
                                   d_frame_mod);
         }
-
-        volatile int x = 7;
     }
 };
 

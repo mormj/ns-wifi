@@ -35,7 +35,7 @@ class base
 public:
 
 	base();
-	~base();
+	virtual ~base();
 	virtual uint8_t* decode(ofdm_param *ofdm, frame_param *frame, uint8_t *in) = 0;
 
 protected:

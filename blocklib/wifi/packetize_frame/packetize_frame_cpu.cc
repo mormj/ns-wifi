@@ -16,9 +16,9 @@ packetize_frame::sptr packetize_frame::make_cpu(const block_args& args)
     return std::make_shared<packetize_frame_cpu>(args);
 }
 
-packetize_frame_cpu::packetize_frame_cpu(
-    const packetize_frame::block_args& args)
-    : block("packetize_frame_cpu"), packetize_frame(args),
+packetize_frame_cpu::packetize_frame_cpu(const packetize_frame::block_args& args)
+    : block("packetize_frame_cpu"),
+      packetize_frame(args),
       d_log(args.log),
       d_debug(args.debug),
       d_freq(args.freq),
@@ -65,43 +65,27 @@ void packetize_frame_cpu::set_algorithm(Equalizer algo)
     }
 }
 
-work_return_code_t
-packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
-                               std::vector<block_work_output>& work_output)
+work_return_code_t packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
+                                             std::vector<block_work_output>& work_output)
 {
     auto in = static_cast<const gr_complex*>(work_input[0].items());
     // auto out = static_cast<uint8_t*>(work_output[0].items());
 
     auto ninput = work_input[0].n_items;
-
-    int i = 0;
-    int o = 0;
-    gr_complex symbols[48];
-    gr_complex current_symbol[64];
-
-    
-
     auto nread = work_input[0].nitems_read();
 
     int symbols_to_consume = ninput;
 
     tags = work_input[0].tags_in_window(0, ninput);
 
-    // std::cout << "PACKETIZE_FRAME : nread " << nread      << " tags " << tags.size()     << std::endl;
-    // std::cout << "   packetize raw tags: " << work_input[0].buffer->tags().size() << std::endl;
+    // std::cout << "PACKETIZE_FRAME : nread " << nread      << " tags " << tags.size() <<
+    // std::endl; std::cout << "   packetize raw tags: " <<
+    // work_input[0].buffer->tags().size() << std::endl;
 
     // std::cout << " -- ninput " << ninput << std::endl;;
     int nconsumed = 0;
-    int nproduced = 0;
     size_t tag_idx = 0;
     while (nconsumed < ninput) {
-        auto tag = &tags[tag_idx];
-        tag_t* next_tag = nullptr;
-        if (tag_idx < tags.size() - 1) {
-            next_tag = &tags[tag_idx + 1];
-        }
-
-
         if (d_state == FINISH_LAST_FRAME) {
             auto max_consume = ninput - nconsumed;
             if (tag_idx < tags.size()) {
@@ -114,7 +98,7 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                     d_state = WAITING_FOR_TAG;
                     continue;
                 }
-            } 
+            }
 
 
             if (d_frame_symbols + 2 > d_current_symbol &&
@@ -149,7 +133,6 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
 
                     d_current_symbol++;
                     nconsumed++;
-                    
                 }
                 // std::cout << " -- nconsumed (2) " << nconsumed << std::endl;;
             }
@@ -158,18 +141,9 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
             if (tag_idx < tags.size()) {
                 // new frame -- send out the old frame
                 if (new_packet) { //(d_pdu) {
-                    // pmt::pmt_t meta(pmt::car(d_pdu));
-                    // pmt::pmt_t data(pmt::cdr(d_pdu));
-
-                    // size_t num_pdu_samples = pmt::length(data);
-                    // size_t len_bytes(0);
-
-                    // const gr_complex *samples =
-                    //     (const gr_complex *)pmt::c32vector_elements(data, len_bytes);
-                    // std::cout << "pub " << samples_buf[8] << std::endl;
                     auto samples =
                         pmt::init_c32vector(64 * d_frame_symbols, samples_buf.data());
-                    
+
                     pmt::pmt_t d = pmt::make_dict();
                     d = pmt::dict_add(
                         d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
@@ -194,25 +168,12 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
 
                     auto pdu = pmt::cons(d, samples);
 
-                    // std::cout << "publish frame" << std::endl;
                     get_message_port("pdus")->post(pdu);
-                    // d_pdu = nullptr;
-                    // FILE *pFile;
-                    // pFile = fopen("/tmp/ns_packetize.dat", "a");
-                    // fprintf(pFile, "%d,", packet_cnt);
-                    // for (int i=0; i<64*23; i++)
-                    // {
-                    //     fprintf(pFile, "%.6f+%.6f,", real(samples_buf[i]), imag(samples_buf[i]));
-                    // }
-                    // fprintf(pFile, "\n");
-                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                    // fclose(pFile);
                     packet_cnt++;
-                        
-                        if (packet_cnt % 1000 == 0)
-                        {
+
+                    if (packet_cnt % 1000 == 0) {
                         std::cout << "packetize_frame: " << packet_cnt << std::endl;
-                        }
+                    }
 
                     new_packet = false;
                 }
@@ -229,7 +190,7 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
 
                 auto frame_start = tags[tag_idx].offset - nread;
 
-                if (frame_start + 3 >= ninput) {
+                if ((int)frame_start + 3 >= ninput) {
                     nconsumed = frame_start;
                     // std::cout << " -- nconsumed (3) " << nconsumed << std::endl;;
                     break;
@@ -239,24 +200,13 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                 static gr_complex symbols[64];
 
                 for (int i = 0; i < 3; i++) {
-                    process_symbol(
-                        (gr_complex*)(in + (frame_start + i) * 64), symbols, signal_field);
+                    process_symbol((gr_complex*)(in + (frame_start + i) * 64),
+                                   symbols,
+                                   signal_field);
                     d_current_symbol++;
                 }
 
                 if (decode_signal_field(signal_field)) {
-
-
-                    // FILE *pFile;
-                    // pFile = fopen("/tmp/ns_signal_field.m", "w");
-                    // fprintf(pFile, "sf2 = [");
-                    // for (int i=0; i<64; i++)
-                    // {
-                    //     fprintf(pFile, "%.6f+%.6fj,", real(symbols[i]), imag(symbols[i]));
-                    // }
-                    // fprintf(pFile, "];\n");
-                    // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                    // fclose(pFile);
 
                     // check for maximum frame size
                     if (d_frame_symbols > MAX_SYM || d_frame_bytes > MAX_PSDU_SIZE) {
@@ -267,32 +217,7 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                         continue;
                     }
 
-                    // std::cout << d_frame_bytes << " / " << d_frame_encoding <<
-                    // std::endl;
-                    // pmt::pmt_t d = pmt::make_dict();
-                    // d = pmt::dict_add(
-                    //     d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
-                    // d = pmt::dict_add(
-                    //     d, pmt::mp("frame_symbols"), pmt::from_uint64(d_frame_symbols));
-                    // d = pmt::dict_add(
-                    //     d, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
-                    // d = pmt::dict_add(
-                    //     d, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
-                    // d = pmt::dict_add(d, pmt::mp("freq"), pmt::from_double(d_freq));
-                    // d = pmt::dict_add(d, pmt::mp("bw"), pmt::from_double(d_bw));
-                    // d = pmt::dict_add(d,
-                    //                   pmt::mp("freq_offset"),
-                    //                   pmt::from_double(d_freq_offset_from_synclong));
-                    // d = pmt::dict_add(
-                    //     d, pmt::mp("H"), pmt::init_c32vector(64, d_equalizer->get_H()));
-                    // d = pmt::dict_add(
-                    //     d, pmt::mp("prev_pilots"), pmt::init_c32vector(4, d_prev_pilots));
-
-                    // auto samples =
-                    //     pmt::make_c32vector(64 * d_frame_symbols, gr_complex(0, 0));
-                    // d_pdu = pmt::cons(d, samples);
-
-                    if (samples_buf.size() < d_frame_symbols * 64) {
+                    if ((int)samples_buf.size() < d_frame_symbols * 64) {
                         samples_buf.resize(d_frame_symbols * 64);
                     }
                     new_packet = true;
@@ -307,9 +232,7 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                     // produce_each(0, work_output);
                     d_state = WAITING_FOR_TAG;
                     // std::cout << " -- nconsumed (5) " << nconsumed << std::endl;;
-
                 }
-
 
 
             } else {
@@ -319,15 +242,14 @@ packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
 
             tag_idx++;
         }
-
-        
     }
 
-    // std::cout << "   packetize ninput/nconsumed: " << ninput << " / " << nconsumed << std::endl;
+    // std::cout << "   packetize ninput/nconsumed: " << ninput << " / " << nconsumed <<
+    // std::endl;
 
     consume_each(nconsumed, work_input);
-    produce_each(0,work_output);
-    
+    produce_each(0, work_output);
+
     return work_return_code_t::WORK_OK;
 }
 
@@ -439,8 +361,8 @@ const int packetize_frame_cpu::interleaver_pattern[48] = {
 };
 
 void packetize_frame_cpu::process_symbol(gr_complex* in,
-                                              gr_complex* symbols,
-                                              uint8_t* out)
+                                         gr_complex* symbols,
+                                         uint8_t* out)
 {
     static gr_complex current_symbol[64];
 

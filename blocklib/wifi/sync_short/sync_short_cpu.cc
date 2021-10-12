@@ -50,7 +50,7 @@ work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_inpu
         for (i = 0; i < ninput; i++) {
             // std::cout << work_input[0].nitems_read()+i << " " << work_input[1].nitems_read()+i << " " << work_input[2].nitems_read()+i << std::endl;
             if (in_cor[i] > d_threshold) {
-                if (d_plateau < MIN_PLATEAU) {
+                if (d_plateau < (int)MIN_PLATEAU) {
                     d_plateau++;
 
                 } else {
@@ -90,7 +90,7 @@ work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_inpu
         while (o < ninput && o < noutput && d_copied < MAX_SAMPLES) {
             // std::cout << work_input[0].nitems_read()+o << " " << work_input[1].nitems_read()+o << " " << work_input[2].nitems_read()+o << std::endl;
             if (in_cor[o] > d_threshold) {
-                if (d_plateau < MIN_PLATEAU) {
+                if (d_plateau < (int)MIN_PLATEAU) {
                     d_plateau++;
 
                     // there's another frame

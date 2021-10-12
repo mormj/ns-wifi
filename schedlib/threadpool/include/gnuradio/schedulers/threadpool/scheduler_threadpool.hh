@@ -24,8 +24,8 @@ class scheduler_threadpool : public scheduler
 {
 private:
     std::vector<threadpool::thread_wrapper::sptr> _threads;
-    const int s_num_threads;
-    const int s_queue_depth;
+    const size_t s_num_threads;
+    const size_t s_queue_depth;
     std::map<nodeid_t, neighbor_interface_sptr> _block_thread_map;
     std::vector<block_group_properties> _block_groups;
     

@@ -53,7 +53,7 @@ work_return_code_t pre_sync_cuda::work(std::vector<block_work_input>& work_input
     int ninput = work_input[0].n_items;
 
     // adjust the inputs and outputs
-    if (ninput < (noutput + hist_samps + 16)) {
+    if (ninput < (int)(noutput + hist_samps + 16)) {
         noutput = ninput - hist_samps - 16;
     } else {
         ninput = noutput + hist_samps + 16;

@@ -12,42 +12,71 @@
 #include <pmt/pmt.h>
 
 
-extern void exec_freq_correction(cuFloatComplex *in, cuFloatComplex *out,
-                                 float freq_offset, float start_idx, int n,
-                                 int grid_size, int block_size,
+extern void exec_freq_correction(cuFloatComplex* in,
+                                 cuFloatComplex* out,
+                                 float freq_offset,
+                                 float start_idx,
+                                 int n,
+                                 int grid_size,
+                                 int block_size,
                                  cudaStream_t stream);
-extern void get_block_and_grid_freq_correction(int *minGrid, int *minBlock);
+extern void get_block_and_grid_freq_correction(int* minGrid, int* minBlock);
 
-extern void exec_multiply_const(cuFloatComplex *in, cuFloatComplex *out,
-                                cuFloatComplex k, int n, int grid_size,
-                                int block_size, cudaStream_t stream);
-extern void exec_multiply_phase(cuFloatComplex *in, cuFloatComplex *out,
-                                float *beta, int n, int grid_size,
-                                int block_size, cudaStream_t stream);
-extern void exec_calc_beta_err(cuFloatComplex *in, float *polarity,
+extern void exec_multiply_const(cuFloatComplex* in,
+                                cuFloatComplex* out,
+                                cuFloatComplex k,
+                                int n,
+                                int grid_size,
+                                int block_size,
+                                cudaStream_t stream);
+extern void exec_multiply_phase(cuFloatComplex* in,
+                                cuFloatComplex* out,
+                                float* beta,
+                                int n,
+                                int grid_size,
+                                int block_size,
+                                cudaStream_t stream);
+extern void exec_calc_beta_err(cuFloatComplex* in,
+                               float* polarity,
                                int current_symbol_index,
-                               cuFloatComplex *last_symbol, float bw,
-                               float freq, float *beta, float *err, int n,
-                               int grid_size, int block_size,
+                               cuFloatComplex* last_symbol,
+                               float bw,
+                               float freq,
+                               float* beta,
+                               float* err,
+                               int n,
+                               int grid_size,
+                               int block_size,
                                cudaStream_t stream);
-extern void exec_correct_sampling_offset(cuFloatComplex *in,
-                                         cuFloatComplex *out, int start_idx,
-                                         float freq_offset, int n,
-                                         int grid_size, int block_size,
+extern void exec_correct_sampling_offset(cuFloatComplex* in,
+                                         cuFloatComplex* out,
+                                         int start_idx,
+                                         float freq_offset,
+                                         int n,
+                                         int grid_size,
+                                         int block_size,
                                          cudaStream_t stream);
 
-extern void exec_ls_freq_domain_equalization(cuFloatComplex *in,
-                                             cuFloatComplex *out,
-                                             cuFloatComplex *H, int n,
-                                             int grid_size, int block_size,
+extern void exec_ls_freq_domain_equalization(cuFloatComplex* in,
+                                             cuFloatComplex* out,
+                                             cuFloatComplex* H,
+                                             int n,
+                                             int grid_size,
+                                             int block_size,
                                              cudaStream_t stream);
 
-extern void exec_ls_freq_domain_chanest(cuFloatComplex *in, float *training_seq,
-                                        cuFloatComplex *H, int grid_size,
-                                        int block_size, cudaStream_t stream);
+extern void exec_ls_freq_domain_chanest(cuFloatComplex* in,
+                                        float* training_seq,
+                                        cuFloatComplex* H,
+                                        int grid_size,
+                                        int block_size,
+                                        cudaStream_t stream);
 
-extern void exec_bpsk_decision_maker(cuFloatComplex *in, uint8_t *out, int n,
-                                     int grid_size, int block_size,
+extern void exec_bpsk_decision_maker(cuFloatComplex* in,
+                                     uint8_t* out,
+                                     int n,
+                                     int grid_size,
+                                     int block_size,
                                      cudaStream_t stream);
 
 namespace gr {
@@ -58,9 +87,9 @@ frame_equalizer::sptr frame_equalizer::make_cuda(const block_args& args)
     return std::make_shared<frame_equalizer_cuda>(args);
 }
 
-frame_equalizer_cuda::frame_equalizer_cuda(
-    const frame_equalizer::block_args& args)
-    : block("frame_equalizer_cuda"), frame_equalizer(args),
+frame_equalizer_cuda::frame_equalizer_cuda(const frame_equalizer::block_args& args)
+    : block("frame_equalizer_cuda"),
+      frame_equalizer(args),
       d_log(args.log),
       d_debug(args.debug),
       d_freq(args.freq),
@@ -105,11 +134,6 @@ frame_equalizer_cuda::frame_equalizer_cuda(
     checkCudaErrors(cudaMemcpy(
         d_dev_long_training, fLONG, 64 * sizeof(float), cudaMemcpyHostToDevice));
 
-    cuFloatComplex* d_dev_prev_pilots;
-    float* d_dev_beta;
-    float* d_dev_err;
-    float* d_dev_d_err;
-
     set_output_multiple(64);
 }
 
@@ -142,18 +166,11 @@ void frame_equalizer_cuda::set_algorithm(Equalizer algo)
     }
 }
 
-work_return_code_t
-frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
-                                std::vector<block_work_output>& work_output)
+work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
+                                              std::vector<block_work_output>& work_output)
 {
     auto in = static_cast<const gr_complex*>(work_input[0].items());
     auto out = static_cast<uint8_t*>(work_output[0].items());
-
-
-    int i = 0;
-    int o = 0;
-    gr_complex symbols[48];
-    gr_complex current_symbol[64];
 
     auto nread = work_input[0].nitems_read();
     auto nwritten = work_output[0].nitems_written();
@@ -161,7 +178,7 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
     // noutput_items << std::endl;
 
     auto noutput_items = work_output[0].n_items;
-	auto ninput_items = work_input[0].n_items;
+    auto ninput_items = work_input[0].n_items;
     int symbols_to_consume = work_input[0].n_items;
 
     tags = work_input[0].tags_in_window(
@@ -250,12 +267,8 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
 
 
             gridSize = (symbols_to_process * 64 + d_block_size - 1) / d_block_size;
-            exec_bpsk_decision_maker(d_dev_in,
-                                     out,
-                                     symbols_to_process * 48,
-                                     gridSize,
-                                     d_block_size,
-                                     d_stream);
+            exec_bpsk_decision_maker(
+                d_dev_in, out, symbols_to_process * 48, gridSize, d_block_size, d_stream);
 
 
             // checkCudaErrors(cudaMemcpyAsync(out,
@@ -268,23 +281,22 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
             for (int o = 0; o < symbols_to_process; o++) {
 
                 if (d_current_symbol == 3) {
-					// std::cout << "PACKET with " << d_frame_bytes << std::endl;
+                    // std::cout << "PACKET with " << d_frame_bytes << std::endl;
                     pmt::pmt_t dict = pmt::make_dict();
                     dict = pmt::dict_add(
                         dict, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
                     dict = pmt::dict_add(
                         dict, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
                     // dict = pmt::dict_add(
-                        // dict, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
+                    // dict, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
                     dict = pmt::dict_add(dict, pmt::mp("freq"), pmt::from_double(d_freq));
                     dict = pmt::dict_add(dict,
                                          pmt::mp("freq_offset"),
                                          pmt::from_double(d_freq_offset_from_synclong));
-                    work_output[0].add_tag(
-                                 nwritten + o,
-                                 pmt::string_to_symbol("wifi_start"),
-                                 dict,
-                                 pmt::string_to_symbol(alias()));
+                    work_output[0].add_tag(nwritten + o,
+                                           pmt::string_to_symbol("wifi_start"),
+                                           dict,
+                                           pmt::string_to_symbol(alias()));
                 }
 
                 d_current_symbol++;
@@ -294,7 +306,8 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
                 d_state = WAITING_FOR_TAG;
             }
 
-            // std::cout << "consume/produce:" << symbols_to_consume << "/" << symbols_to_process << std::endl;
+            // std::cout << "consume/produce:" << symbols_to_consume << "/" <<
+            // symbols_to_process << std::endl;
             cudaStreamSynchronize(d_stream);
             consume_each(symbols_to_consume, work_input);
             // return symbols_to_process;
@@ -317,7 +330,7 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
 
             auto frame_start = tags[0].offset - nread;
 
-            if (frame_start + 3 >= ninput_items) {
+            if ((int)frame_start + 3 >= ninput_items) {
                 // consume(0, frame_start);
                 // return 0;
                 consume_each(frame_start, work_input);
@@ -350,14 +363,17 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
                                d_block_size,
                                d_stream);
 
-			float host_beta[3];
-			float host_er[3];
+            float host_beta[3];
+            float host_er[3];
 
-			cudaMemcpyAsync(host_beta, d_dev_beta, 3 * sizeof(float),
-							cudaMemcpyDeviceToHost, d_stream);
-			cudaMemcpyAsync(host_er, d_dev_er, 3 * sizeof(float),
-							cudaMemcpyDeviceToHost, d_stream);
-			cudaStreamSynchronize(d_stream);
+            cudaMemcpyAsync(host_beta,
+                            d_dev_beta,
+                            3 * sizeof(float),
+                            cudaMemcpyDeviceToHost,
+                            d_stream);
+            cudaMemcpyAsync(
+                host_er, d_dev_er, 3 * sizeof(float), cudaMemcpyDeviceToHost, d_stream);
+            cudaStreamSynchronize(d_stream);
 
 
             checkCudaErrors(cudaMemcpyAsync(d_dev_last_symbol,
@@ -377,11 +393,14 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
             exec_ls_freq_domain_chanest(
                 d_dev_in, d_dev_long_training, d_dev_H, gridSize, d_block_size, d_stream);
 
-				gr_complex host_H[64];
+            gr_complex host_H[64];
 
-				cudaMemcpyAsync(host_H, d_dev_H, 64 * sizeof(gr_complex),
-				                cudaMemcpyDeviceToHost, d_stream);
-				
+            cudaMemcpyAsync(host_H,
+                            d_dev_H,
+                            64 * sizeof(gr_complex),
+                            cudaMemcpyDeviceToHost,
+                            d_stream);
+
             exec_ls_freq_domain_equalization(d_dev_in + 64 * 2,
                                              d_dev_in + 64 * 2,
                                              d_dev_H,
@@ -389,7 +408,6 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
                                              gridSize,
                                              d_block_size,
                                              d_stream);
-
 
 
             exec_bpsk_decision_maker(
@@ -425,6 +443,10 @@ frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
             return work_return_code_t::WORK_OK;
         }
     }
+
+    consume_each(0, work_input);
+    produce_each(0, work_output);
+    return work_return_code_t::WORK_OK;
 }
 
 bool frame_equalizer_cuda::decode_signal_field(uint8_t* rx_bits)

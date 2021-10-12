@@ -25,8 +25,8 @@ private:
 	void descramble (uint8_t *decoded_bits);
 	void print_output();
 
-	bool d_debug;
 	bool d_log;
+	bool d_debug;
 
 	ofdm_param d_ofdm = BPSK_1_2;
 	frame_param d_frame;

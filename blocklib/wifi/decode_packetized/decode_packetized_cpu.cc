@@ -48,7 +48,7 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
     pmt::pmt_t meta(pmt::car(msg));
     pmt::pmt_t data(pmt::cdr(msg));
 
-    size_t num_pdu_samples = pmt::length(data);
+    // size_t num_pdu_samples = pmt::length(data);
     size_t len_bytes(0);
 
     const gr_complex *samples =
@@ -71,8 +71,8 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
         pmt::dict_ref(meta, pmt::mp("freq"), pmt::from_double(2412000000)));
     d_freq_offset = pmt::to_double(
         pmt::dict_ref(meta, pmt::mp("freq_offset"), pmt::from_double(0.0)));
-    auto pc = pmt::to_uint64(
-        pmt::dict_ref(meta, pmt::mp("packet_cnt"), pmt::from_uint64(0)));
+    // auto pc = pmt::to_uint64(
+    //     pmt::dict_ref(meta, pmt::mp("packet_cnt"), pmt::from_uint64(0)));
 
 
     switch (d_frame_encoding) {
@@ -214,7 +214,6 @@ void decode_packetized_cpu::deinterleave() {
 		second[i] = 16 * i - (n_cbps - 1) * int(floor(16.0 * i / n_cbps));
 	}
 
-	int count = 0;
 	for(int i = 0; i < d_frame.n_sym; i++) {
 		for(int k = 0; k < n_cbps; k++) {
 			d_deinterleaved_bits[i * n_cbps + second[first[k]]] = d_rx_bits[i * n_cbps + k];

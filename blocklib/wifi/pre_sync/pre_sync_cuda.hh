@@ -22,8 +22,8 @@ public:
                                     std::vector<block_work_output>& work_output) override;
 
 private:
-    size_t d_window_size;
     size_t d_buffer_size;
+    size_t d_window_size;
 
     std::shared_ptr<cusp::convolve<float, float>> p_ma_ff;
     std::shared_ptr<cusp::convolve<gr_complex, gr_complex>> p_ma_cc;
