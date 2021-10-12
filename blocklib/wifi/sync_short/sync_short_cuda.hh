@@ -32,8 +32,10 @@ public:
     }
 
 private:
-    float d_threshold;
+	const bool d_log;
+	const bool d_debug;
     int d_min_plateau;
+    float d_threshold;
     uint64_t d_last_tag_location = 0;
     float d_freq_offset;
 
@@ -55,8 +57,7 @@ private:
 
     static const int d_max_out_buffer = 1024*1024*2; // max bytes for output buffer
 
-	const bool d_log;
-	const bool d_debug;
+
 };
 
 } // namespace wifi
