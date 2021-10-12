@@ -20,8 +20,8 @@ public:
                                     std::vector<block_work_output>& work_output) override;
 
 private:
-	const bool d_log;
-	const bool d_debug;
+    const bool d_log;
+    const bool d_debug;
 
     enum { WAITING_FOR_TAG, FINISH_LAST_FRAME } d_state = WAITING_FOR_TAG;
     unsigned int d_sync_length;
@@ -47,7 +47,7 @@ private:
 
     size_t packet_cnt = 0;
 
-    int         d_offset = 0;
+    int d_offset = 0;
 };
 
 } // namespace wifi

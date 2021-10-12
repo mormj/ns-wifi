@@ -114,8 +114,8 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
         }
     }
 
-    gr_complex host_in[160];
-    cudaMemcpy(host_in, in+h, 160*sizeof(gr_complex), cudaMemcpyDeviceToHost);
+    // gr_complex host_in[160];
+    // cudaMemcpy(host_in, in+h, 160*sizeof(gr_complex), cudaMemcpyDeviceToHost);
 
     auto gridSize = (noutput + d_block_size - 1) / d_block_size;
     exec_freq_correction((cuFloatComplex*)in + h,

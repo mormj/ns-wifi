@@ -24,18 +24,18 @@ extern void exec_remove_cp(cuFloatComplex* in,
                            int grid_size,
                            int block_size,
                            cudaStream_t stream);
-                           
+
 
 extern void exec_remove_cp_freqcorr(cuFloatComplex* in,
-    cuFloatComplex* out,
-    int symlen,
-    int cplen,
-    int n,
-    int grid_size,
-    int block_size,
-    float freqoff,
-    int start_sym,
-    cudaStream_t stream);
+                                    cuFloatComplex* out,
+                                    int symlen,
+                                    int cplen,
+                                    int n,
+                                    int grid_size,
+                                    int block_size,
+                                    float freqoff,
+                                    int start_sym,
+                                    cudaStream_t stream);
 
 extern void exec_freq_correction(cuFloatComplex* in,
                                  cuFloatComplex* out,
@@ -45,6 +45,8 @@ extern void exec_freq_correction(cuFloatComplex* in,
                                  int grid_size,
                                  int block_size,
                                  cudaStream_t stream);
+
+extern void get_block_and_grid_multiply(int *minGrid, int *minBlock);
 
 namespace gr {
 namespace wifi {
@@ -85,12 +87,10 @@ sync_long_cuda::sync_long_cuda(const sync_long::block_args& args)
         cufftExecC2C(d_plan, d_dev_training_freq, d_dev_training_freq, CUFFT_FORWARD));
     cudaStreamSynchronize(d_stream);
 
-    // get_block_and_grid_multiply(&d_min_grid_size, &d_block_size);
-    d_block_size = 1024;
+    get_block_and_grid_multiply(&d_min_grid_size, &d_block_size);
+    // d_block_size = 1024;
 
     set_tag_propagation_policy(tag_propagation_policy_t::TPP_DONT);
-
-    // set_output_multiple(64); // ??
 }
 
 work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_input,
@@ -100,10 +100,6 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
     // int ninput = std::min(work_input[0].n_items, work_input[1].n_items);
     auto ninput = work_input[0].n_items;
     auto noutput = work_output[0].n_items * 64;
-    // if (noutput * 64 > ninput * 80 / 64 )
-    // {
-    //     return work_return_code_t::WORK_INSUFFICIENT_INPUT_ITEMS;
-    // }
 
     auto in = static_cast<const gr_complex*>(work_input[0].items());
     auto out = static_cast<gr_complex*>(work_output[0].items());
@@ -128,12 +124,6 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
     size_t tag_idx = 0;
     while (true) {
-        auto tag = &tags[tag_idx];
-        tag_t* next_tag = nullptr;
-        if (tag_idx < tags.size() - 1) {
-            next_tag = &tags[tag_idx + 1];
-        }
-
         if (d_state == FINISH_LAST_FRAME) {
             auto max_consume = ninput - nconsumed;
             auto max_produce = noutput - nproduced;
@@ -156,28 +146,17 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
             auto nsyms = std::min(max_consume / 80, max_produce / 64);
             auto gridSize = (80 * nsyms + d_block_size - 1) / d_block_size;
-            // exec_remove_cp((cuFloatComplex*)in + nconsumed,
-            //                (cuFloatComplex*)out + nproduced,
-            //                80,
-            //                16,
-            //                80 * nsyms,
-            //                gridSize,
-            //                d_block_size,
-            //                d_stream);
-            // // cudaStreamSynchronize(d_stream);
-
 
             exec_remove_cp_freqcorr((cuFloatComplex*)in + nconsumed,
-                           (cuFloatComplex*)out + nproduced,
-                           80,
-                           16,
-                           80 * nsyms,
-                           gridSize,
-                           d_block_size,
-                           -d_freq_offset,
-                           d_offset,
-                           d_stream);
-            // cudaStreamSynchronize(d_stream);
+                                    (cuFloatComplex*)out + nproduced,
+                                    80,
+                                    16,
+                                    80 * nsyms,
+                                    gridSize,
+                                    d_block_size,
+                                    -d_freq_offset,
+                                    d_offset,
+                                    d_stream);
 
             int i = 80 * nsyms;
             int o = 64 * nsyms;
@@ -193,7 +172,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
                 d_freq_offset_short = pmt::to_double(tags[0].value);
 
-                if (offset - nread + d_fftsize <= ninput &&
+                if ((int)(offset - nread + d_fftsize) <= ninput &&
                     (noutput - nproduced) >= 128) {
 
                     checkCudaErrors(cufftExecC2C(d_plan,
@@ -233,37 +212,14 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                     gr_complex corr_1;
                     gr_complex corr_2;
 
-                    // for (size_t i = 0; i < host_data.size(); i++) {
-                    //     abs_corr[i] = std::abs(host_data[i]);
-                    //     // std::cout << abs_corr[i];
-                    //     // if (i < host_data.size()-1)
-                    //     // std::cout << ",";
-
-                    //     if (abs_corr[i] > max_value) {
-                    //         max_value_2 = max_value;
-                    //         max_index_2 = max_index;
-                    //         max_value = abs_corr[i];
-                    //         max_index = i;
-                    //     }
-                    //     else if (abs_corr[i] > max_value_2)
-                    //     {
-                    //         max_value_2 = abs_corr[i];
-                    //         max_index_2 = i;
-                    //     }
-                    // }
-                    // std::cout << "abs_corr = [";
                     for (size_t i = 0; i < host_data.size(); i++) {
                         abs_corr[i] = std::abs(host_data[i]);
-                        // std::cout << abs_corr[i];
-                        // if (i < host_data.size() - 1)
-                        //     std::cout << ",";
 
                         if (abs_corr[i] > max_value) {
                             max_value = abs_corr[i];
                             max_index = i;
                         }
                     }
-                    // std::cout << "];" << std::endl;
                     for (size_t i = 0; i < host_data.size(); i++) {
                         if (abs_corr[i] > max_value_2 && i != max_index) {
                             max_value_2 = abs_corr[i];
@@ -278,7 +234,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
                             d_freq_offset =
                                 arg(host_data[max_index] * conj(host_data[max_index_2])) /
-                                (max_index_2 - max_index) ;
+                                (max_index_2 - max_index);
                             max_index = max_index_2;
                             valid = true;
                         }
@@ -287,93 +243,62 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                         if (diff <= 65 && diff >= 63) {
                             d_freq_offset =
                                 arg(host_data[max_index_2] * conj(host_data[max_index])) /
-                                (max_index - max_index_2) ;
-                            
+                                (max_index - max_index_2);
+
                             valid = true;
                         }
                     }
 
-                    if (valid)
-                    {
-                            // d_freq_offset = -.00248403;
-                    // size_t max_index = 297;
+                    if (valid) {
 
-                    // Copy the LTF symbols
-                    // offset and nread should always be equal
-                    size_t copy_index = 0;
-                    if (max_index > (160 - 32 - 1)) {
-                        copy_index = max_index - 160 + 32 + 1;
-                    }
-                    // if (max_index > (160 - 1)) {
-                    //     copy_index = max_index - 160 + 1;
-                    // }
-                    
+                        // Copy the LTF symbols
+                        // offset and nread should always be equal
+                        size_t copy_index = 0;
+                        if (max_index > (160 - 32 - 1)) {
+                            copy_index = max_index - 160 + 32 + 1;
+                        }
 
+                        exec_freq_correction(
+                            (cuFloatComplex*)in + (offset - nread + copy_index),
+                            (cuFloatComplex*)out + nproduced,
+                            -d_freq_offset, // it gets negated in the kernel
+                            0,
+                            128,
+                            1,
+                            128,
+                            d_stream);
+                        cudaStreamSynchronize(d_stream);
+                        gr_complex host_in[128];
+                        gr_complex host_out[128];
+                        cudaMemcpy(host_in,
+                                   in + (offset - nread + copy_index),
+                                   128 * sizeof(gr_complex),
+                                   cudaMemcpyDeviceToHost);
+                        cudaMemcpy(host_out,
+                                   out + nproduced,
+                                   128 * sizeof(gr_complex),
+                                   cudaMemcpyDeviceToHost);
 
-                    // checkCudaErrors(cudaMemcpyAsync(out + nproduced,
-                    //                                 in + (offset - nread + copy_index),
-                    //                                 sizeof(gr_complex) * 128,
-                    //                                 cudaMemcpyDeviceToDevice,
-                    //                                 d_stream));
+                        d_offset = 160;
 
-                    exec_freq_correction((cuFloatComplex*)in + (offset - nread + copy_index),
-                                                    (cuFloatComplex*)out + nproduced,
-                                                    -d_freq_offset, // it gets negated in the kernel
-                                                    0,
-                                                    128,
-                                                    1,
-                                                    128,
-                                                    d_stream);
-                    cudaStreamSynchronize(d_stream);
-                gr_complex host_in[128];
-                gr_complex host_out[128];
-                cudaMemcpy(host_in, in + (offset - nread + copy_index), 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
-                cudaMemcpy(host_out, out + nproduced, 128*sizeof(gr_complex), cudaMemcpyDeviceToHost);
-                // FILE *pFile;
-                // pFile = fopen("/tmp/sync_long_freqcorrect.m", "w");
-                // fprintf(pFile, "x = [");
-                // for (int i=0; i<128; i++)
-                // {
-                //     fprintf(pFile, "%.6f+%.6fj,", real(host_out[i]), imag(host_out[i]));
-                // }
-                // fprintf(pFile, "];\n");
-                // fprintf(pFile, "y = [");
-                // for (int i=0; i<128; i++)
-                // {
-                //     fprintf(pFile, "%.6f+%.6fj,", real(host_in[i]), imag(host_in[i]));
-                // }
-                // fprintf(pFile, "];\n");
-                // // fwrite(rx_bits, 1, frame_info.n_sym * 48 , pFile);
-                // fclose(pFile);
+                        const pmt::pmt_t key = pmt::string_to_symbol("wifi_start");
+                        const pmt::pmt_t value = // pmt::from_long(max_index);
+                            pmt::from_double(d_freq_offset_short - d_freq_offset);
+                        const pmt::pmt_t srcid = pmt::string_to_symbol(name());
+                        work_output[0].add_tag(
+                            nwritten + nproduced / 64, key, value, srcid);
+                        // std::cout << "SYNC LONG tag at " << nwritten + nproduced / 64
+                        // << std::endl;
+                        //   add_item_tag(0, nwritten + nproduced, key, value, srcid);
+                        packet_cnt++;
+                        if (packet_cnt % 100 == 0) {
+                            std::cout << "sync_long: " << packet_cnt << std::endl;
+                        }
 
-                    d_offset = 160;
-
-                    // checkCudaErrors(cudaMemcpyAsync(tmp,
-                    //                                 in + (offset - nread + copy_index),
-                    //                                 sizeof(gr_complex) * 128,
-                    //                                 cudaMemcpyDeviceToHost,
-                    //                                 d_stream));
-                   
-
-
-                    const pmt::pmt_t key = pmt::string_to_symbol("wifi_start");
-                    const pmt::pmt_t value = // pmt::from_long(max_index);
-                        pmt::from_double(d_freq_offset_short - d_freq_offset);
-                    const pmt::pmt_t srcid = pmt::string_to_symbol(name());
-                    work_output[0].add_tag(nwritten + nproduced / 64, key, value, srcid);
-                    // std::cout << "SYNC LONG tag at " << nwritten + nproduced / 64 <<
-                    // std::endl;
-                    //   add_item_tag(0, nwritten + nproduced, key, value, srcid);
-                    packet_cnt++;
-                    if (packet_cnt % 10 == 0) {
-                        std::cout << "sync_long: " << packet_cnt << std::endl;
-                    }
-
-                    d_num_syms = 0;
-                    d_state = FINISH_LAST_FRAME;
-                    nconsumed = (offset - nread + copy_index + 128);
-                    nproduced += 128;
-
+                        d_num_syms = 0;
+                        d_state = FINISH_LAST_FRAME;
+                        nconsumed = (offset - nread + copy_index + 128);
+                        nproduced += 128;
                     }
                     tag_idx++;
 
