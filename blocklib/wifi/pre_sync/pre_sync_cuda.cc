@@ -29,12 +29,12 @@ pre_sync_cuda::pre_sync_cuda(const pre_sync::block_args& args)
 
     checkCudaErrors(cudaMalloc((void**)&dev_buf_1, d_buffer_size));
     checkCudaErrors(cudaMalloc((void**)&dev_buf_2, d_buffer_size));
-    checkCudaErrors(cudaMalloc((void**)&dev_buf_3, d_buffer_size));
-    checkCudaErrors(cudaMalloc((void**)&dev_buf_4, d_buffer_size));
-    checkCudaErrors(cudaMalloc((void**)&dev_buf_5, d_buffer_size));
-    checkCudaErrors(cudaMalloc((void**)&dev_buf_6, d_buffer_size));
-    checkCudaErrors(cudaMalloc((void**)&dev_buf_7, d_buffer_size));
-    checkCudaErrors(cudaMalloc((void**)&dev_buf_8, d_buffer_size));
+    // checkCudaErrors(cudaMalloc((void**)&dev_buf_3, d_buffer_size));
+    // checkCudaErrors(cudaMalloc((void**)&dev_buf_4, d_buffer_size));
+    // checkCudaErrors(cudaMalloc((void**)&dev_buf_5, d_buffer_size));
+    // checkCudaErrors(cudaMalloc((void**)&dev_buf_6, d_buffer_size));
+    // checkCudaErrors(cudaMalloc((void**)&dev_buf_7, d_buffer_size));
+    // checkCudaErrors(cudaMalloc((void**)&dev_buf_8, d_buffer_size));
 }
 
 work_return_code_t pre_sync_cuda::work(std::vector<block_work_input>& work_input,

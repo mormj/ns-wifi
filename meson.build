@@ -27,8 +27,8 @@ pybind11_dep = dependency('pybind11', required : get_option('enable_python'))
 threads_dep = dependency('threads')
 gtest_dep = dependency('gtest', main : true, version : '>=1.10', required : get_option('enable_testing'))
 cuda_dep = dependency('cuda', version : '>=10.1', required : cuda_available and get_option('enable_cuda'), modules : ['cufft'])
-
 cusp_dep = dependency('cusp')
+USE_CUDA = cuda_available and get_option('enable_cuda')
 
 flatc = find_program('flatc', version : '>=1.12')
 

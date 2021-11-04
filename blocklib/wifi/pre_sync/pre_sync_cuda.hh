@@ -37,12 +37,12 @@ private:
 
     void* dev_buf_1;
     void* dev_buf_2;
-    void* dev_buf_3;
-    void* dev_buf_4;
-	void* dev_buf_5;
-	void* dev_buf_6;
-	void* dev_buf_7;
-	void* dev_buf_8;
+    // void* dev_buf_3;
+    // void* dev_buf_4;
+	// void* dev_buf_5;
+	// void* dev_buf_6;
+	// void* dev_buf_7;
+	// void* dev_buf_8;
 
 	cudaStream_t d_stream;
 };

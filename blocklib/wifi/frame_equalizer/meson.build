@@ -1,46 +1,32 @@
 yml_file = 'frame_equalizer.yml'
 
-frame_equalizer_files = files(['frame_equalizer_cpu.cc'])
-if cuda_dep.found() and get_option('enable_cuda')
+srcs = files(['frame_equalizer_cpu.cc'])
+if USE_CUDA
     wifi_cu_sources += files(
         ['frame_equalizer.cu',
          'multiply_const.cu',
          'equalize.cu',
          'constellation.cu'])
-    frame_equalizer_files += files(['frame_equalizer_cuda.cc'])
+    srcs += files(['frame_equalizer_cuda.cc'])
 endif
 
-gen_frame_equalizer_h = custom_target('gen_frame_equalizer_cpu_h',
+gen_srcs = custom_target('gen_frame_equalizer_h',
                         input : ['frame_equalizer.yml'],
-                        output : ['frame_equalizer.hh'],
+                        output : ['frame_equalizer.cc', 'frame_equalizer.hh', 'frame_equalizer_pybind.cc', 'wifi_frame_equalizer.block.yml'],
                         command : ['python3', join_paths(share_dir,'utils/blockbuilder/scripts/process_folder.py'),
                             '--yaml_file', '@INPUT@', 
-                            '--output_file', '@OUTPUT@', 
+                            '--output-cc', '@OUTPUT0@', 
+                            '--output-hh', '@OUTPUT1@', 
+                            '--output-pybind', '@OUTPUT2@', 
+                            '--output-grc', '@OUTPUT3@', 
                             '--build_dir', join_paths(meson.build_root())],
                         install : true,
-                        install_dir : 'include/gnuradio/wifi')
+                        install_dir : [false, 'include/gnuradio/wifi',false,'share/gnuradio/grc/blocks'])
 
-gen_frame_equalizer_cc = custom_target('gen_frame_equalizer_cpu_cc',
-                        input : ['frame_equalizer.yml'],
-                        output : ['frame_equalizer.cc'],
-                        command : ['python3', join_paths(share_dir,'utils/blockbuilder/scripts/process_folder.py'),
-                            '--yaml_file', '@INPUT@', 
-                            '--output_file', '@OUTPUT@', 
-                            '--build_dir', join_paths(meson.build_root())],
-                        install : false)        
+wifi_deps += declare_dependency(sources : [gen_srcs[1]] ) 
+wifi_sources += [srcs, gen_srcs[0]]
 
-wifi_deps += declare_dependency(sources : [gen_frame_equalizer_h])
-wifi_sources += [frame_equalizer_files, gen_frame_equalizer_cc]
-
-if get_option('enable_python')
-    gen_frame_equalizer_pybind = custom_target('gen_frame_equalizer_cpu_pybind',
-                            input : ['frame_equalizer.yml'],
-                            output : ['frame_equalizer_pybind.cc'],
-                            command : ['python3', join_paths(share_dir,'utils/blockbuilder/scripts/process_pybind.py'),
-                                '--yaml_file', '@INPUT@', 
-                                '--output_file', '@OUTPUT@', 
-                                '--build_dir', join_paths(meson.build_root())],
-                            install : false)                   
-    wifi_pybind_sources += gen_frame_equalizer_pybind
+if get_option('enable_python')                           
+    wifi_pybind_sources += gen_srcs[2]
     wifi_pybind_names += 'frame_equalizer'
 endif
