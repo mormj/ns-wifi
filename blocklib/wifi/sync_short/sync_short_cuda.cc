@@ -44,10 +44,10 @@ sync_short_cuda::sync_short_cuda(const sync_short::block_args& args)
 work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_input,
                                          std::vector<block_work_output>& work_output)
 {
-    const gr_complex* in = (const gr_complex*)work_input[0].items();
-    const gr_complex* in_abs = (const gr_complex*)work_input[1].items();
-    const float* in_cor = (const float*)work_input[2].items();
-    gr_complex* out = (gr_complex*)work_output[0].items();
+    auto in = work_input[0].items<gr_complex>();
+    auto in_abs = work_input[1].items<gr_complex>();
+    auto  in_cor = work_input[2].items<float>();
+    auto out = work_output[0].items<gr_complex>();
 
     int noutput = work_output[0].n_items;
     int ninput = std::min(std::min(work_input[0].n_items, work_input[1].n_items),

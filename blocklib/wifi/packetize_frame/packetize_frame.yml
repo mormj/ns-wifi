@@ -1,10 +1,7 @@
 module: wifi
 block: packetize_frame
 label: Wifi Packetize Frame
-
-properties:
--   id: blocktype
-    value: general
+blocktype: block
 
 parameters:
 -   id: algo
@@ -35,7 +32,7 @@ ports:
     id: in
     direction: input
     type: gr_complex
-    dims: '{64}'
+    dims: 64
 -   domain: message
     id: pdus
     direction: output

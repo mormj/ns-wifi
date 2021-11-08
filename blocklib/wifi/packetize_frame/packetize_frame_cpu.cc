@@ -8,6 +8,8 @@
 
 #include "utils.h"
 
+#include <pmtf/map.hpp>
+
 namespace gr {
 namespace wifi {
 
@@ -68,8 +70,7 @@ void packetize_frame_cpu::set_algorithm(Equalizer algo)
 work_return_code_t packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
                                              std::vector<block_work_output>& work_output)
 {
-    auto in = static_cast<const gr_complex*>(work_input[0].items());
-    // auto out = static_cast<uint8_t*>(work_output[0].items());
+    auto in = work_input[0].items<gr_complex>();
 
     auto ninput = work_input[0].n_items;
     auto nread = work_input[0].nitems_read();
@@ -141,32 +142,55 @@ work_return_code_t packetize_frame_cpu::work(std::vector<block_work_input>& work
             if (tag_idx < tags.size()) {
                 // new frame -- send out the old frame
                 if (new_packet) { //(d_pdu) {
-                    auto samples =
-                        pmt::init_c32vector(64 * d_frame_symbols, samples_buf.data());
+                    // auto samples =
+                    //     pmt::init_c32vector(64 * d_frame_symbols, samples_buf.data());
 
-                    pmt::pmt_t d = pmt::make_dict();
-                    d = pmt::dict_add(
-                        d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
-                    d = pmt::dict_add(
-                        d, pmt::mp("frame_symbols"), pmt::from_uint64(d_frame_symbols));
-                    d = pmt::dict_add(
-                        d, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
-                    d = pmt::dict_add(
-                        d, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
-                    d = pmt::dict_add(d, pmt::mp("freq"), pmt::from_double(d_freq));
-                    d = pmt::dict_add(d, pmt::mp("bw"), pmt::from_double(d_bw));
-                    d = pmt::dict_add(d,
-                                      pmt::mp("freq_offset"),
-                                      pmt::from_double(d_freq_offset_from_synclong));
-                    d = pmt::dict_add(
-                        d, pmt::mp("H"), pmt::init_c32vector(64, d_equalizer->get_H()));
-                    d = pmt::dict_add(
-                        d, pmt::mp("prev_pilots"), pmt::init_c32vector(4, d_prev_pilots));
+                    auto samples = pmtf::vector<gr_complex>(
+                        samples_buf.data(), samples_buf.data() + 64 * d_frame_symbols);
 
-                    d = pmt::dict_add(
-                        d, pmt::mp("packet_cnt"), pmt::from_uint64(packet_cnt));
+                    // pmtf::wrap d = pmt::make_dict();
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("frame_symbols"),
+                    //     pmt::from_uint64(d_frame_symbols));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
+                    // d = pmt::dict_add(d, pmt::mp("freq"), pmt::from_double(d_freq));
+                    // d = pmt::dict_add(d, pmt::mp("bw"), pmt::from_double(d_bw));
+                    // d = pmt::dict_add(d,
+                    //                   pmt::mp("freq_offset"),
+                    //                   pmt::from_double(d_freq_offset_from_synclong));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("H"), pmt::init_c32vector(64,
+                    //     d_equalizer->get_H()));
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("prev_pilots"), pmt::init_c32vector(4,
+                    //     d_prev_pilots));
 
-                    auto pdu = pmt::cons(d, samples);
+                    // d = pmt::dict_add(
+                    //     d, pmt::mp("packet_cnt"), pmt::from_uint64(packet_cnt));
+                    auto d = pmtf::map<std::string>({
+                        { "frame_bytes", pmtf::wrap(d_frame_bytes) },
+                        { "frame_symbols", pmtf::wrap(d_frame_symbols) },
+                        { "encoding", pmtf::wrap(d_frame_encoding) },
+                        { "snr", pmtf::wrap(d_equalizer->get_snr()) },
+                        { "freq", pmtf::wrap(d_freq) },
+                        { "bw", pmtf::wrap(d_bw) },
+                        { "freq_offset", pmtf::wrap(d_freq_offset_from_synclong) },
+                        { "H",
+                          pmtf::wrap(pmtf::vector<gr_complex>(
+                              d_equalizer->get_H(), d_equalizer->get_H() + 64)) },
+                        { "prev_pilots",
+                          pmtf::wrap(pmtf::vector<gr_complex>(d_prev_pilots,
+                                                              d_prev_pilots + 4)) },
+                        { "packet_cnt", pmtf::wrap(packet_cnt) },
+                    });
+
+                    auto pdu =
+                        pmtf::map<std::string>({ { "data", samples }, { "meta", d } });
 
                     get_message_port("pdus")->post(pdu);
                     packet_cnt++;
@@ -183,9 +207,10 @@ work_return_code_t packetize_frame_cpu::work(std::vector<block_work_input>& work
                 d_frame_mod = d_bpsk;
 
                 d_freq_offset_from_synclong =
-                    pmt::to_double(tags[tag_idx].value) * d_bw / (2 * M_PI);
-                d_epsilon0 =
-                    pmt::to_double(tags[tag_idx].value) * d_bw / (2 * M_PI * d_freq);
+                    pmtf::get_scalar_value<double>(tags[tag_idx].value) * d_bw /
+                    (2 * M_PI);
+                d_epsilon0 = pmtf::get_scalar_value<double>(tags[tag_idx].value) * d_bw /
+                             (2 * M_PI * d_freq);
                 d_er = 0;
 
                 auto frame_start = tags[tag_idx].offset - nread;

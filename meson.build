@@ -38,9 +38,10 @@ prefix_parts = prefix.split(' ')
 prefix = '\ '.join(prefix_parts)
 share_dir = join_paths(prefix,'share')
 
+
 # newsched_dep = dependency('newsched', method: 'cmake')
 # TODO - do this with subcomponents
-pmt_dep = dependency('newsched-pmt')
+pmtf_dep = dependency('pmtf', version : '>= 0.0.2')
 newsched_runtime_dep = dependency('newsched-runtime')
 newsched_blocklib_filter_dep = dependency('newsched-filter')
 newsched_blocklib_fft_dep = dependency('newsched-fft')

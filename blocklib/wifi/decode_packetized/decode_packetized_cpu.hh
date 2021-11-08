@@ -5,7 +5,7 @@
 #include <gnuradio/wifi/constellations.hh>
 #include <gnuradio/wifi/decode_packetized.hh>
 
-#include <pmt/pmt.h>
+#include <pmtf/wrap.hpp>
 #include <mutex>
 
 #include <gnuradio/wifi/wifi_types.hh>
@@ -86,7 +86,7 @@ private:
     double d_bw;
 
 
-    virtual void handle_msg_pdus(pmt::pmt_t msg);
+    virtual void handle_msg_pdus(pmtf::wrap msg);
 
     const int interleaver_pattern[48] = {
         0, 3, 6, 9,  12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45,
@@ -141,7 +141,7 @@ private:
             //   ofdm_info.encoding % frame_info.psdu_size % frame_info.n_sym);
 
         // // create PDU
-        // pmt::pmt_t blob = pmt::make_blob(out_bytes + 2, frame_info.psdu_size -
+        // pmtf::wrap blob = pmt::make_blob(out_bytes + 2, frame_info.psdu_size -
         // 4); d_meta = pmt::dict_add(d_meta, pmt::mp("dlt"),
         //                        pmt::from_long(LINKTYPE_IEEE802_11));
 

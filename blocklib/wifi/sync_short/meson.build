@@ -2,7 +2,7 @@ srcs = files(['sync_short_cpu.cc'])
 
 if USE_CUDA
     srcs += files('sync_short_cuda.cc')
-    wifi_cu_sources += files('sync_short_cuda.cu')
+    # wifi_cu_sources += files('sync_short_cuda.cu')
 endif
 
 gen_srcs = custom_target('gen_sync_short_h',

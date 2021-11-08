@@ -66,7 +66,7 @@ private:
 	size_t ntags_tx = 0;
 
 	int packet_cnt = 0;
-	pmt::pmt_t d_pdu = nullptr;
+	pmtf::wrap d_pdu = nullptr;
 
 	std::vector<gr_complex> samples_buf;
 	bool new_packet = false;

@@ -1,10 +1,7 @@
 module: wifi
 block: sync_short
 label: Wifi Sync Short
-
-properties:
--   id: blocktype
-    value: general
+blocktype: block
 
 parameters:
 -   id: threshold

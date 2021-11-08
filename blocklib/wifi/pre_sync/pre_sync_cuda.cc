@@ -40,10 +40,10 @@ pre_sync_cuda::pre_sync_cuda(const pre_sync::block_args& args)
 work_return_code_t pre_sync_cuda::work(std::vector<block_work_input>& work_input,
                                            std::vector<block_work_output>& work_output)
 {
-    const gr_complex* in = (const gr_complex*)work_input[0].items();
-    gr_complex* out = (gr_complex*)work_output[0].items();
-    gr_complex* abs = (gr_complex*)work_output[1].items();
-    float* cor = (float*)work_output[2].items();
+    auto in = work_input[0].items<gr_complex>();
+    auto out = work_output[0].items<gr_complex>();
+    auto abs = work_output[1].items<gr_complex>();
+    auto cor = work_output[2].items<float>();
 
     auto hist_samps = d_window_size + 16 - 1;
 

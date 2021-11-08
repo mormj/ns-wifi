@@ -1,10 +1,7 @@
 module: wifi
 block: decode_packetized
 label: Wifi Decode MAC Packetized
-
-properties:
--   id: blocktype
-    value: general
+blocktype: block
 
 parameters:
 -   id: log

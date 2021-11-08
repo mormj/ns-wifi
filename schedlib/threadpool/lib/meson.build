@@ -2,7 +2,7 @@ scheduler_threadpool_sources = [
     'thread_wrapper.cc',
     'scheduler_threadpool.cc',
 ]
-scheduler_threadpool_deps = [newsched_runtime_dep, threads_dep, fmt_dep, pmt_dep]
+scheduler_threadpool_deps = [newsched_runtime_dep, threads_dep, fmt_dep, pmtf_dep]
 
 link_args = ['-lnewsched-runtime']
 

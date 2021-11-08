@@ -1,6 +1,8 @@
 #include "sync_long_cuda.hh"
 
-#include <pmt/pmt.h>
+#include <pmtf/wrap.hpp>
+#include <pmtf/string.hpp>
+#include <pmtf/scalar.hpp>
 
 #include <gnuradio/helper_cuda.h>
 
@@ -101,8 +103,8 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
     auto ninput = work_input[0].n_items;
     auto noutput = work_output[0].n_items * 64;
 
-    auto in = static_cast<const gr_complex*>(work_input[0].items());
-    auto out = static_cast<gr_complex*>(work_output[0].items());
+    auto in = work_input[0].items<gr_complex>();
+    auto out = work_output[0].items<gr_complex>();
 
 
     GR_LOG_DEBUG(_debug_logger,
@@ -170,7 +172,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
             if (tag_idx < tags.size()) {
                 auto offset = tags[tag_idx].offset;
 
-                d_freq_offset_short = pmt::to_double(tags[0].value);
+                d_freq_offset_short = pmtf::get_scalar_value<double>(tags[0].value);
 
                 if ((int)(offset - nread + d_fftsize) <= ninput &&
                     (noutput - nproduced) >= 128) {
@@ -281,10 +283,10 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
 
                         d_offset = 160;
 
-                        const pmt::pmt_t key = pmt::string_to_symbol("wifi_start");
-                        const pmt::pmt_t value = // pmt::from_long(max_index);
-                            pmt::from_double(d_freq_offset_short - d_freq_offset);
-                        const pmt::pmt_t srcid = pmt::string_to_symbol(name());
+                        const pmtf::wrap key = pmtf::string("wifi_start");
+                        const pmtf::wrap value = // pmt::from_long(max_index);
+                            pmtf::scalar<double>(d_freq_offset_short - d_freq_offset);
+                        const pmtf::wrap srcid = pmtf::string(name());
                         work_output[0].add_tag(
                             nwritten + nproduced / 64, key, value, srcid);
                         // std::cout << "SYNC LONG tag at " << nwritten + nproduced / 64

@@ -2,7 +2,9 @@
 
 #include <gnuradio/wifi/sync_short.hh>
 
-#include <pmt/pmt.h>
+#include <pmtf/wrap.hpp>
+#include <pmtf/string.hpp>
+#include <pmtf/scalar.hpp>
 
 namespace gr {
 namespace wifi {
@@ -17,9 +19,9 @@ public:
 void insert_tag(uint64_t item, double freq_offset, uint64_t input_item, block_work_output& work_output) {
 	// mylog(boost::format("frame start at in: %2% out: %1%") % item % input_item);
 
-	const pmt::pmt_t key = pmt::string_to_symbol("wifi_start");
-	const pmt::pmt_t value = pmt::from_double(freq_offset);
-	const pmt::pmt_t srcid = pmt::string_to_symbol(name());
+	const auto key = pmtf::string("wifi_start");
+	const auto value = pmtf::scalar<double>(freq_offset);
+	const auto srcid = pmtf::string(name());
 	work_output.add_tag(item, key, value, srcid);
 
 }

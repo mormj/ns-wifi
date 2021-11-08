@@ -4,6 +4,9 @@
 #include "utils.h"
 #include "viterbi_decoder/viterbi_decoder.h"
 
+#include <pmtf/scalar.hpp>
+#include <pmtf/map.hpp>
+
 namespace gr {
 namespace wifi {
 
@@ -25,7 +28,7 @@ decode_mac_cpu::decode_mac_cpu(const decode_mac::block_args& args)
 work_return_code_t decode_mac_cpu::work(std::vector<block_work_input>& work_input,
                                              std::vector<block_work_output>& work_output)
 {
-    auto in = static_cast<const gr_complex*>(work_input[0].items());
+    auto in = work_input[0].items<gr_complex>();
 
     auto ninput_items = work_input[0].n_items;
 
@@ -49,12 +52,12 @@ work_return_code_t decode_mac_cpu::work(std::vector<block_work_input>& work_inpu
 			}
 			d_frame_complete = false;
 
-			pmt::pmt_t dict = tags[0].value;
-			int len_data = pmt::to_uint64(pmt::dict_ref(dict, pmt::mp("frame_bytes"), pmt::from_uint64(MAX_PSDU_SIZE+1)));
-			int encoding = pmt::to_uint64(pmt::dict_ref(dict, pmt::mp("encoding"), pmt::from_uint64(0)));
-			// d_snr = pmt::to_double(pmt::dict_ref(dict, pmt::mp("snr"), pmt::from_double(0)));
-			d_nom_freq = pmt::to_double(pmt::dict_ref(dict, pmt::mp("freq"), pmt::from_double(0)));
-			d_freq_offset = pmt::to_double(pmt::dict_ref(dict, pmt::mp("freq_offset"), pmt::from_double(0)));
+			auto dict = pmtf::get_map_value<std::string>(tags[0].value);
+			auto len_data = pmtf::get_scalar_value<uint64_t>(dict["frame_bytes"]);
+			auto encoding = pmtf::get_scalar_value<uint64_t>(dict["encoding"]);
+			// auto d_snr = pmtf::get_scalar_value<double>(dict["snr"]);
+			// auto d_nom_freq = pmtf::get_scalar_value<double>(dict["freq"]);
+			// auto d_freq_offset = pmtf::get_scalar_value<double>(dict["freq_offset"]);
 
 			ofdm_param ofdm = ofdm_param((Encoding)encoding);
 			frame_param frame = frame_param(ofdm, len_data);
@@ -125,9 +128,9 @@ void decode_mac_cpu::decode() {
 
 #if 0
 	// create PDU
-	pmt::pmt_t blob = pmt::make_blob(out_bytes + 2, d_frame.psdu_size - 4);
-	pmt::pmt_t enc = pmt::from_uint64(d_ofdm.encoding);
-	pmt::pmt_t dict = pmt::make_dict();
+	pmtf::wrap blob = pmt::make_blob(out_bytes + 2, d_frame.psdu_size - 4);
+	pmtf::wrap enc = pmt::from_uint64(d_ofdm.encoding);
+	pmtf::wrap dict = pmt::make_dict();
 	dict = pmt::dict_add(dict, pmt::mp("encoding"), enc);
 	dict = pmt::dict_add(dict, pmt::mp("snr"), pmt::from_double(d_snr));
 	dict = pmt::dict_add(dict, pmt::mp("nomfreq"), pmt::from_double(d_nom_freq));

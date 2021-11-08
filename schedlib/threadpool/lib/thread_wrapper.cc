@@ -34,7 +34,7 @@ thread_wrapper::thread_wrapper(int id,
     for (size_t i=0; i<tpp.num_threads; i++)
     {
         auto newblock = clonable->clone();
-        auto lambda = [this, newblock](pmt::pmt_t msg) 
+        auto lambda = [this, newblock](pmtf::wrap msg) 
         { 
             return newblock->get_first_message_port(port_direction_t::INPUT)->callback()(msg); 
         };

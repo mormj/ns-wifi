@@ -1,6 +1,8 @@
 #include "sync_long_cpu.hh"
 
-#include <pmt/pmt.h>
+#include <pmtf/wrap.hpp>
+#include <pmtf/scalar.hpp>
+#include <pmtf/string.hpp>
 
 static const int MIN_GAP = 480;
 static const int MAX_SAMPLES = 540 * 80;
@@ -27,9 +29,9 @@ sync_long_cpu::sync_long_cpu(const sync_long::block_args& args)
 work_return_code_t sync_long_cpu::work(std::vector<block_work_input>& work_input,
                                             std::vector<block_work_output>& work_output)
 {
-    const gr_complex* in = (const gr_complex*)work_input[0].items();
-    const gr_complex* in_delayed = (const gr_complex*)work_input[1].items();
-    gr_complex* out = (gr_complex*)work_output[0].items();
+    auto in = work_input[0].items<gr_complex>();
+    auto in_delayed = work_input[1].items<gr_complex>();
+    auto out = work_output[0].items<gr_complex>();
     auto noutput = work_output[0].n_items;
 
     GR_LOG_DEBUG(_debug_logger,
@@ -58,7 +60,7 @@ work_return_code_t sync_long_cpu::work(std::vector<block_work_input>& work_input
             if (d_state == COPY) {
                 d_state = RESET;
             }
-            d_freq_offset_short = pmt::to_double(d_tags.front().value);
+            d_freq_offset_short = pmtf::get_scalar_value<double>(d_tags.front().value);
         }
     }
 
@@ -104,9 +106,9 @@ work_return_code_t sync_long_cpu::work(std::vector<block_work_input>& work_input
                 // 		pmt::string_to_symbol(name()));
                 work_output[0].add_tag(
                     work_output[0].nitems_written(),
-                    pmt::string_to_symbol("wifi_start"),
-                    pmt::from_double(d_freq_offset_short - d_freq_offset),
-                    pmt::string_to_symbol(name()));
+                    pmtf::string("wifi_start"),
+                    pmtf::scalar<double>(d_freq_offset_short - d_freq_offset),
+                    pmtf::string(name()));
 
                 // std::cout << "             sl tx: " << ++ntags_tx << " ? " <<
                 // work_output[0].nitems_written() << std::endl;

@@ -1,10 +1,7 @@
 module: wifi
 block: frame_equalizer
 label: Wifi Frame Equalizer
-
-properties:
--   id: blocktype
-    value: general
+blocktype: block
 
 parameters:
 -   id: algo
@@ -35,12 +32,12 @@ ports:
     id: in
     direction: input
     type: gr_complex
-    dims: '{64}'
+    dims: 64
 -   domain: stream
     id: out
     direction: output
     type: uint8_t
-    dims: '{48}' 
+    dims: 48
 -   domain: message
     id: symbols
     direction: output

@@ -1,10 +1,7 @@
 module: wifi
 block: sync_long
 label: Wifi Sync Long
-
-properties:
--   id: blocktype
-    value: general
+blocktype: block
 
 parameters:
 -   id: sync_length

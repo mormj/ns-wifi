@@ -9,7 +9,10 @@
 #include "utils.h"
 
 #include <gnuradio/helper_cuda.h>
-#include <pmt/pmt.h>
+#include <pmtf/map.hpp>
+#include <pmtf/scalar.hpp>
+#include <pmtf/string.hpp>
+#include <pmtf/wrap.hpp>
 
 
 extern void exec_freq_correction(cuFloatComplex* in,
@@ -169,8 +172,8 @@ void frame_equalizer_cuda::set_algorithm(Equalizer algo)
 work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
                                               std::vector<block_work_output>& work_output)
 {
-    auto in = static_cast<const gr_complex*>(work_input[0].items());
-    auto out = static_cast<uint8_t*>(work_output[0].items());
+    auto in = work_input[0].items<gr_complex>();
+    auto out = work_output[0].items<uint8_t>();
 
     auto nread = work_input[0].nitems_read();
     auto nwritten = work_output[0].nitems_written();
@@ -282,21 +285,29 @@ work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input>& wor
 
                 if (d_current_symbol == 3) {
                     // std::cout << "PACKET with " << d_frame_bytes << std::endl;
-                    pmt::pmt_t dict = pmt::make_dict();
-                    dict = pmt::dict_add(
-                        dict, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
-                    dict = pmt::dict_add(
-                        dict, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
+                    // pmtf::wrap dict = pmt::make_dict();
                     // dict = pmt::dict_add(
-                    // dict, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
-                    dict = pmt::dict_add(dict, pmt::mp("freq"), pmt::from_double(d_freq));
-                    dict = pmt::dict_add(dict,
-                                         pmt::mp("freq_offset"),
-                                         pmt::from_double(d_freq_offset_from_synclong));
+                    //     dict, pmt::mp("frame_bytes"), pmt::from_uint64(d_frame_bytes));
+                    // dict = pmt::dict_add(
+                    //     dict, pmt::mp("encoding"), pmt::from_uint64(d_frame_encoding));
+                    // // dict = pmt::dict_add(
+                    // // dict, pmt::mp("snr"), pmt::from_double(d_equalizer->get_snr()));
+                    // dict = pmt::dict_add(dict, pmt::mp("freq"),
+                    // pmt::from_double(d_freq)); dict = pmt::dict_add(dict,
+                    //                      pmt::mp("freq_offset"),
+                    //                      pmt::from_double(d_freq_offset_from_synclong));
+
+                    auto dict = pmtf::map<std::string>({
+                        { "frame_bytes", d_frame_bytes },
+                        { "encoding", d_frame_bytes },
+                        { "freq", d_frame_bytes },
+                        { "freq_offset", d_frame_bytes },
+                    });
+
                     work_output[0].add_tag(nwritten + o,
-                                           pmt::string_to_symbol("wifi_start"),
+                                           pmtf::string("wifi_start"),
                                            dict,
-                                           pmt::string_to_symbol(alias()));
+                                           pmtf::string(alias()));
                 }
 
                 d_current_symbol++;
@@ -324,8 +335,8 @@ work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input>& wor
             d_frame_mod = d_bpsk;
 
             d_freq_offset_from_synclong =
-                pmt::to_double(tags.front().value) * d_bw / (2 * M_PI);
-            d_epsilon0 = pmt::to_double(tags.front().value) * d_bw / (2 * M_PI * d_freq);
+                pmtf::get_scalar_value<double>(tags.front().value) * d_bw / (2 * M_PI);
+            d_epsilon0 = pmtf::get_scalar_value<double>(tags.front().value) * d_bw / (2 * M_PI * d_freq);
             d_er = 0;
 
             auto frame_start = tags[0].offset - nread;

@@ -29,19 +29,16 @@
 
 #include "detail.h"
 
-#include <pmt/pmt.h>
+#include <pmtf/wrap.hpp>
 #include <gnuradio/thread.hh>
 using namespace std::chrono_literals;
-using namespace pmt;
+
 namespace gr {
 namespace schedulers {
 namespace threadpool {
 
-typedef std::function<void(pmt_t)> message_func_t;
+typedef std::function<void(pmtf::wrap)> message_func_t;
 
-
-
-#if 1
 class threadpool
 {
 public:
@@ -61,26 +58,17 @@ public:
             auto f = [this, i, flag, message_funcs /* a copy of the shared ptr to the flag */]() {
                 gr::thread::set_thread_name(pthread_self(),
                                         std::string("tp") + std::to_string(i));
-                // std::cout << "entering thread " << i << std::endl;
-                std::atomic<bool>& _flag = *flag;
-                pmt::pmt_t _p;
 
-                // if (i == 0)
-                // {
+                std::atomic<bool>& _flag = *flag;
+                pmtf::wrap _p;
 
                 bool isPop = this->q.pop(_p);
                 // burst_worker b(i);
                 while (true) {
                     while (isPop) { // if there is anything in the queue
-                        // std::cout << i << " dequeueing ... " << std::endl;
-                        // std::cout << "dequeue " << i << " ? " << this->q.qsize() <<
-                        // std::endl;
-                        // this->oq.push(b.process(_p));
-                        // this->oq.push(message_funcs[i](_p));
                         message_funcs[i](_p);
                         // std::this_thread::sleep_for(2000ms);
                         if (_flag) {
-                            std::cout << "return1 " << i << std::endl;
                             return; // the thread is wanted to stop, return even if the
                                     // queue is not empty yet
                         } else
@@ -100,14 +88,12 @@ public:
                     //     *flag then return
                     // }
                 }
-                // }
-                std::cout << "return3 " << i << std::endl;
             };
             this->threads[i].reset(new std::thread(f));
         }
     }
     ~threadpool() { std::cout << "threadpool: " << std::endl; };
-    void enqueue(pmt::pmt_t p)
+    void enqueue(pmtf::wrap p)
     {
 
         this->q.push(p);
@@ -115,9 +101,9 @@ public:
         std::unique_lock<std::mutex> lock(this->m_mutex);
         this->cv.notify_one();
     }
-    pmt::pmt_t dequeue()
+    pmtf::wrap dequeue()
     {
-        pmt::pmt_t r = pmt::PMT_NIL;
+        pmtf::wrap r;
         this->oq.pop(r);
         return r;
     }
@@ -127,8 +113,8 @@ public:
 private:
     std::vector<std::unique_ptr<std::thread>> threads;
     std::thread& get_thread(int i) { return *this->threads[i]; }
-    detail::Queue<pmt::pmt_t> q;
-    detail::Queue<pmt::pmt_t> oq;
+    detail::Queue<pmtf::wrap> q;
+    detail::Queue<pmtf::wrap> oq;
     unsigned m_numthreads;
     unsigned m_queuedepth;
     std::mutex m_mutex;
@@ -137,7 +123,6 @@ private:
     std::atomic<bool> isStop;
     std::atomic<int> nWaiting; // how many threads are waiting
 };
-#endif
 
 } // namespace threadpool
 } // namespace schedulers

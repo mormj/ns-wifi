@@ -1,10 +1,7 @@
 module: wifi
 block: decode_mac
 label: Wifi Decode MAC
-
-properties:
--   id: blocktype
-    value: general
+blocktype: block
 
 parameters:
 -   id: log
@@ -23,7 +20,7 @@ ports:
     id: in
     direction: input
     type: uint8_t
-    dims: '{48}' 
+    dims: 48
 -   domain: message
     id: out
     direction: output

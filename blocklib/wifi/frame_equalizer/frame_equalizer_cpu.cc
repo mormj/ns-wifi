@@ -8,6 +8,10 @@
 
 #include "utils.h"
 
+#include <pmtf/scalar.hpp>
+#include <pmtf/string.hpp>
+#include <pmtf/map.hpp>
+
 namespace gr {
 namespace wifi {
 
@@ -65,8 +69,8 @@ frame_equalizer_cpu::set_algorithm(Equalizer algo) {
 work_return_code_t frame_equalizer_cpu::work(std::vector<block_work_input>& work_input,
                                              std::vector<block_work_output>& work_output)
 {
-    auto in = static_cast<const gr_complex*>(work_input[0].items());
-    auto out = static_cast<uint8_t*>(work_output[0].items());
+    auto in = work_input[0].items<gr_complex>();
+    auto out = work_output[0].items<uint8_t>();
 
     auto ninput_items = work_input[0].n_items;
     auto noutput_items = work_output[0].n_items;
@@ -92,7 +96,7 @@ work_return_code_t frame_equalizer_cpu::work(std::vector<block_work_input>& work
 			d_frame_symbols = 0;
 			d_frame_mod = d_bpsk;
 
-            double tag_val = pmt::to_double(tags.front().value);
+            auto tag_val = pmtf::get_scalar_value<double>(tags.front().value);
 			
 			// pmtf::pmt_scalar<double>::from_buffer(
             //                           tags.front().value->buffer_pointer()+4)
@@ -212,26 +216,36 @@ work_return_code_t frame_equalizer_cpu::work(std::vector<block_work_input>& work
 			if(decode_signal_field(out + o * 48)) {
 				// std::cout << "PACKET with " << d_frame_bytes << std::endl;
 				
-				pmt::pmt_t dict = pmt::make_dict();
-				dict = pmt::dict_add(dict, pmt::mp("frame_bytes"),
-									pmt::from_uint64(d_frame_bytes));
-				dict = pmt::dict_add(dict, pmt::mp("encoding"),
-									pmt::from_uint64(d_frame_encoding));
-				dict = pmt::dict_add(dict, pmt::mp("snr"),
-									pmt::from_double(d_equalizer->get_snr()));
-				dict = pmt::dict_add(dict, pmt::mp("freq"), pmt::from_double(d_freq));
-				dict = pmt::dict_add(dict, pmt::mp("freq_offset"),
-									pmt::from_double(d_freq_offset_from_synclong));
-				work_output[0].add_tag(work_output[0].nitems_written() + o,
-							pmt::string_to_symbol("wifi_start"), dict,
-							pmt::string_to_symbol(alias()));
+				auto d = pmtf::map<std::string>(
+					{
+						{"frame_bytes",d_frame_bytes},
+						{"encoding",d_frame_bytes},
+						{"snr",d_frame_bytes},
+						{"freq",d_frame_bytes},
+						{"freq_offset",d_frame_bytes},
+						{"wifi_start",d_frame_bytes},
+					}
+				);
+				// pmtf::wrap dict = pmt::make_dict();
+				// dict = pmt::dict_add(dict, pmt::mp("frame_bytes"),
+				// 					pmt::from_uint64(d_frame_bytes));
+				// dict = pmt::dict_add(dict, pmt::mp("encoding"),
+				// 					pmt::from_uint64(d_frame_encoding));
+				// dict = pmt::dict_add(dict, pmt::mp("snr"),
+				// 					pmt::from_double(d_equalizer->get_snr()));
+				// dict = pmt::dict_add(dict, pmt::mp("freq"), pmt::from_double(d_freq));
+				// dict = pmt::dict_add(dict, pmt::mp("freq_offset"),
+				// 					pmt::from_double(d_freq_offset_from_synclong));
+				// work_output[0].add_tag(work_output[0].nitems_written() + o,
+				// 			pmt::string_to_symbol("wifi_start"), dict,
+				// 			pmt::string_to_symbol(alias()));
 
 			}
 		}
 
 		if(d_current_symbol > 2) {
 			o++;
-			// pmt::pmt_t pdu = pmt::make_dict();
+			// pmtf::wrap pdu = pmt::make_dict();
 			// message_port_pub(pmt::mp("symbols"), pmt::cons(pmt::make_dict(), pmt::init_c32vector(48, symbols)));
 		}
 

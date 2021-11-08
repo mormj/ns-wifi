@@ -4,6 +4,8 @@
 #include "utils.h"
 #include "viterbi_decoder/viterbi_decoder.h"
 
+#include <pmtf/map.hpp>
+
 namespace gr {
 namespace wifi {
 
@@ -41,39 +43,19 @@ work_return_code_t decode_packetized_cpu::work(std::vector<block_work_input>& wo
 }
 
 
-void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
+void decode_packetized_cpu::handle_msg_pdus(pmtf::wrap msg)
 {
 	// std::cout << "got msg" << std::endl;
 
-    pmt::pmt_t meta(pmt::car(msg));
-    pmt::pmt_t data(pmt::cdr(msg));
+    auto meta = pmtf::get_map<std::string>(pmtf::get_map<std::string>(msg)["meta"]);
+    auto samples = pmtf::get_vector<gr_complex>(pmtf::get_map<std::string>(msg)["data"]);
 
-    // size_t num_pdu_samples = pmt::length(data);
-    size_t len_bytes(0);
-
-    const gr_complex *samples =
-        (const gr_complex *)pmt::c32vector_elements(data, len_bytes);
-
-    if (!samples) {
-      std::cout << "ERROR: Invalid input type - must be a PMT vector"
-                << std::endl;
-    //   return pmt::PMT_NIL;
-    }
-
-    d_frame_bytes = pmt::to_uint64(
-        pmt::dict_ref(meta, pmt::mp("frame_bytes"), pmt::PMT_NIL));
-    d_frame_symbols = pmt::to_uint64(
-        pmt::dict_ref(meta, pmt::mp("frame_symbols"), pmt::PMT_NIL));
-    d_frame_encoding =
-        pmt::to_uint64(pmt::dict_ref(meta, pmt::mp("encoding"), pmt::PMT_NIL));
-    d_bw = pmt::to_double(pmt::dict_ref(meta, pmt::mp("bw"), pmt::PMT_NIL));
-    d_freq = pmt::to_double(
-        pmt::dict_ref(meta, pmt::mp("freq"), pmt::from_double(2412000000)));
-    d_freq_offset = pmt::to_double(
-        pmt::dict_ref(meta, pmt::mp("freq_offset"), pmt::from_double(0.0)));
-    // auto pc = pmt::to_uint64(
-    //     pmt::dict_ref(meta, pmt::mp("packet_cnt"), pmt::from_uint64(0)));
-
+    d_frame_bytes = pmtf::get_scalar_value<int>(meta["frame_bytes"]);
+    d_frame_symbols = pmtf::get_scalar_value<int>(meta["frame_symbols"]);
+    d_frame_encoding = pmtf::get_scalar_value<int>(meta["encoding"]);
+    d_bw = pmtf::get_scalar_value<double>(meta["bw"]);
+    d_freq = pmtf::get_scalar_value<double>(meta["freq"]);
+    d_freq_offset = pmtf::get_scalar_value<double>(meta["freq_offset"]);
 
     switch (d_frame_encoding) {
     case 0:
@@ -96,15 +78,12 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
       throw new std::runtime_error("invalid encoding");
     }
 
-    size_t len_h, len_prev;
-    const gr_complex *H = pmt::c32vector_elements(
-        pmt::dict_ref(meta, pmt::mp("H"), pmt::PMT_NIL), len_h);
-    const gr_complex *tmp_prev_pilots = pmt::c32vector_elements(
-        pmt::dict_ref(meta, pmt::mp("prev_pilots"), pmt::PMT_NIL), len_prev);
-    memcpy(d_prev_pilots, tmp_prev_pilots, 4 * sizeof(gr_complex));
-    d_equalizer->set_H(H);
+    auto H = pmtf::get_vector<gr_complex>(meta["H"]);
+    auto tmp_prev_pilots = pmtf::get_vector<gr_complex>(meta["prev_pilots"]);
+    memcpy(d_prev_pilots, tmp_prev_pilots.data(), 4 * sizeof(gr_complex));
+    d_equalizer->set_H(H.data());
 
-    equalize_frame(samples, d_rx_symbols);
+    equalize_frame(samples.data(), d_rx_symbols);
 
 
     d_ofdm = ofdm_param((Encoding)d_frame_encoding);
@@ -184,11 +163,6 @@ void decode_packetized_cpu::handle_msg_pdus(pmt::pmt_t msg)
 
     // Insert MAC Decode code here
     // std::cout << "Threadpool got new burst" << std::endl;
-
-    // repackage as pmt and place on output queue
-    // pmt::pmt_t vecpmt(pmt::init_c32vector(nproduced, &buffer1[0]));
-    // pmt::pmt_t pdu(pmt::cons(pmt::PMT_NIL, vecpmt));
-    pmt::pmt_t pdu = pmt::PMT_NIL;
 
     this->packet_cnt++;
 	if (packet_cnt % 1000 == 0)

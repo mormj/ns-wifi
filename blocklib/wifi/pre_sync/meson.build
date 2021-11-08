@@ -2,7 +2,7 @@ srcs = [] #files(['pre_sync_cpu.cc'])
 
 if USE_CUDA
     srcs += files('pre_sync_cuda.cc')
-    wifi_cu_sources += files('pre_sync_cuda.cu')
+    wifi_cu_sources += files('presync.cu')
 endif
 
 gen_srcs = custom_target('gen_pre_sync_h',

@@ -1,6 +1,6 @@
 incdir = include_directories(['../include/gnuradio/wifi','../include'])
 
-wifi_deps += [newsched_runtime_dep, newsched_blocklib_digital_dep, volk_dep, fmt_dep, pmt_dep]
+wifi_deps += [newsched_runtime_dep, newsched_blocklib_digital_dep, volk_dep, fmt_dep, pmtf_dep]
 wifi_sources += ['utils.cc', 
                  'constellations.cc']
 wifi_sources += ['equalizer/base.cc',
@@ -14,7 +14,7 @@ wifi_sources += ['equalizer/base.cc',
                 ]
 
 # This is ugly, and there HAS to be a better way to bring in dependencies
-link_args = ['-lnewsched-pmt','-lnewsched-runtime', '-lnewsched-blocklib-digital', '-lnewsched-blocklib-filter', '-lnewsched-blocklib-fft', '-lnewsched-blocklib-blocks']
+link_args = ['-lnewsched-runtime', '-lnewsched-blocklib-digital', '-lnewsched-blocklib-filter', '-lnewsched-blocklib-fft', '-lnewsched-blocklib-blocks']
 block_cpp_args = ['-DHAVE_CPU']
 
 wifi_cu_sources += ['freq_correction.cu']
