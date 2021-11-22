@@ -1,4 +1,5 @@
 #include "decode_packetized_cpu.hh"
+#include "decode_packetized_cpu_gen.hh"
 
 #include <boost/crc.hpp>
 #include "utils.h"
@@ -8,11 +9,6 @@
 
 namespace gr {
 namespace wifi {
-
-decode_packetized::sptr decode_packetized::make_cpu(const block_args& args)
-{
-    return std::make_shared<decode_packetized_cpu>(args);
-}
 
 decode_packetized_cpu::decode_packetized_cpu(const decode_packetized::block_args& args)
     : block("decode_packetized_cpu"), decode_packetized(args),

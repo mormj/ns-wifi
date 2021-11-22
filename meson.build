@@ -29,6 +29,8 @@ gtest_dep = dependency('gtest', main : true, version : '>=1.10', required : get_
 cuda_dep = dependency('cuda', version : '>=10.1', required : cuda_available and get_option('enable_cuda'), modules : ['cufft'])
 cusp_dep = dependency('cusp')
 USE_CUDA = cuda_available and get_option('enable_cuda')
+IMPLEMENT_CUDA = cuda_available and get_option('enable_cuda')
+IMPLEMENT_CPU = true
 
 flatc = find_program('flatc', version : '>=1.12')
 
@@ -37,7 +39,9 @@ prefix = get_option('prefix')
 prefix_parts = prefix.split(' ')
 prefix = '\ '.join(prefix_parts)
 share_dir = join_paths(prefix,'share')
-
+SCRIPTS_DIR = join_paths(share_dir, 'utils','blockbuilder','scripts' )
+run_command('python3', join_paths(SCRIPTS_DIR,'gen_meson.py'), 
+  join_paths(meson.project_source_root(),'blocklib'), check: true)
 
 # newsched_dep = dependency('newsched', method: 'cmake')
 # TODO - do this with subcomponents
@@ -48,7 +52,7 @@ newsched_blocklib_fft_dep = dependency('newsched-fft')
 newsched_blocklib_digital_dep = dependency('newsched-digital')
 newsched_blocklib_blocks_dep = dependency('newsched-blocks')
 
-subdir('blocklib')
+subdir('blocklib/wifi')
 subdir('schedlib')
 # subdir('docs')
 # if (get_option('enable_python'))

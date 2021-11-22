@@ -1,4 +1,5 @@
 #include "frame_equalizer_cuda.hh"
+#include "frame_equalizer_cuda_gen.hh"
 
 #include "equalizer/base.h"
 #include "equalizer/comb.h"
@@ -84,11 +85,6 @@ extern void exec_bpsk_decision_maker(cuFloatComplex* in,
 
 namespace gr {
 namespace wifi {
-
-frame_equalizer::sptr frame_equalizer::make_cuda(const block_args& args)
-{
-    return std::make_shared<frame_equalizer_cuda>(args);
-}
 
 frame_equalizer_cuda::frame_equalizer_cuda(const frame_equalizer::block_args& args)
     : block("frame_equalizer_cuda"),

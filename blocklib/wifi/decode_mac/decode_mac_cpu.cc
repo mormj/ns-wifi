@@ -1,4 +1,5 @@
 #include "decode_mac_cpu.hh"
+#include "decode_mac_cpu_gen.hh"
 
 #include <boost/crc.hpp>
 #include "utils.h"
@@ -9,11 +10,6 @@
 
 namespace gr {
 namespace wifi {
-
-decode_mac::sptr decode_mac::make_cpu(const block_args& args)
-{
-    return std::make_shared<decode_mac_cpu>(args);
-}
 
 decode_mac_cpu::decode_mac_cpu(const decode_mac::block_args& args)
     : block("decode_mac_cpu"), decode_mac(args),

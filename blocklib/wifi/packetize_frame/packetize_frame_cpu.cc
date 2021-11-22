@@ -1,4 +1,5 @@
 #include "packetize_frame_cpu.hh"
+#include "packetize_frame_cpu_gen.hh"
 
 #include "equalizer/base.h"
 #include "equalizer/comb.h"
@@ -12,11 +13,6 @@
 
 namespace gr {
 namespace wifi {
-
-packetize_frame::sptr packetize_frame::make_cpu(const block_args& args)
-{
-    return std::make_shared<packetize_frame_cpu>(args);
-}
 
 packetize_frame_cpu::packetize_frame_cpu(const packetize_frame::block_args& args)
     : block("packetize_frame_cpu"),

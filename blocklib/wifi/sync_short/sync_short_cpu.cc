@@ -1,15 +1,11 @@
 #include "sync_short_cpu.hh"
+#include "sync_short_cpu_gen.hh"
 
 static const int MIN_GAP = 480;
 static const int MAX_SAMPLES = 540 * 80;
 
 namespace gr {
 namespace wifi {
-
-sync_short::sptr sync_short::make_cpu(const block_args& args)
-{
-    return std::make_shared<sync_short_cpu>(args);
-}
 
 sync_short_cpu::sync_short_cpu(const sync_short::block_args& args)
     : block("sync_short_cpu"), sync_short(args),

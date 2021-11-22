@@ -1,4 +1,5 @@
 #include "sync_long_cpu.hh"
+#include "sync_long_cpu_gen.hh"
 
 #include <pmtf/wrap.hpp>
 #include <pmtf/scalar.hpp>
@@ -9,11 +10,6 @@ static const int MAX_SAMPLES = 540 * 80;
 
 namespace gr {
 namespace wifi {
-
-sync_long::sptr sync_long::make_cpu(const block_args& args)
-{
-    return std::make_shared<sync_long_cpu>(args);
-}
 
 sync_long_cpu::sync_long_cpu(const sync_long::block_args& args)
     : block("sync_long_cpu"), sync_long(args),

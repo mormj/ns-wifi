@@ -1,4 +1,5 @@
 #include "sync_short_cuda.hh"
+#include "sync_short_cuda_gen.hh"
 
 #include <gnuradio/helper_cuda.h>
 
@@ -16,11 +17,6 @@ extern void exec_freq_correction(cuFloatComplex* in,
 
 namespace gr {
 namespace wifi {
-
-sync_short::sptr sync_short::make_cuda(const block_args& args)
-{
-    return std::make_shared<sync_short_cuda>(args);
-}
 
 sync_short_cuda::sync_short_cuda(const sync_short::block_args& args)
     : block("sync_short_cuda"),

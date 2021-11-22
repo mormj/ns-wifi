@@ -1,4 +1,5 @@
 #include "frame_equalizer_cpu.hh"
+#include "frame_equalizer_cpu_gen.hh"
 
 #include "equalizer/base.h"
 #include "equalizer/comb.h"
@@ -14,11 +15,6 @@
 
 namespace gr {
 namespace wifi {
-
-frame_equalizer::sptr frame_equalizer::make_cpu(const block_args& args)
-{
-    return std::make_shared<frame_equalizer_cpu>(args);
-}
 
 frame_equalizer_cpu::frame_equalizer_cpu(const frame_equalizer::block_args& args)
     : block("frame_equalizer_cpu"), frame_equalizer(args),

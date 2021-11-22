@@ -1,4 +1,5 @@
 #include "sync_long_cuda.hh"
+#include "sync_long_cuda_gen.hh"
 
 #include <pmtf/wrap.hpp>
 #include <pmtf/string.hpp>
@@ -52,11 +53,6 @@ extern void get_block_and_grid_multiply(int *minGrid, int *minBlock);
 
 namespace gr {
 namespace wifi {
-
-sync_long::sptr sync_long::make_cuda(const block_args& args)
-{
-    return std::make_shared<sync_long_cuda>(args);
-}
 
 sync_long_cuda::sync_long_cuda(const sync_long::block_args& args)
     : block("sync_long_cuda"), sync_long(args), d_log(args.log), d_debug(args.debug)

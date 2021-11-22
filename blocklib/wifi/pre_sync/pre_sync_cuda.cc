@@ -1,4 +1,5 @@
 #include "pre_sync_cuda.hh"
+#include "pre_sync_cuda_gen.hh"
 
 #include <gnuradio/helper_cuda.h>
 #include <cuda.h>
@@ -16,11 +17,6 @@ extern void exec_corr_abs(cuFloatComplex *in, cuFloatComplex *out, float *mag, i
 
 namespace gr {
 namespace wifi {
-
-pre_sync::sptr pre_sync::make_cuda(const block_args& args)
-{
-    return std::make_shared<pre_sync_cuda>(args);
-}
 
 pre_sync_cuda::pre_sync_cuda(const pre_sync::block_args& args)
     : block("pre_sync_cuda"), pre_sync(args), d_buffer_size(args.buffer_size), d_window_size(args.window_size)
