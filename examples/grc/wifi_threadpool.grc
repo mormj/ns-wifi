@@ -1,0 +1,266 @@
+options:
+  parameters:
+    author: josh
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: no_gui
+    hier_block_src_path: '.:'
+    id: wifi_threadpool
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: run
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Not titled yet
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: nthreads
+  id: variable
+  parameters:
+    comment: ''
+    value: '4'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [488, 100.0]
+    rotation: 0
+    state: true
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: '32000'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [184, 12]
+    rotation: 0
+    state: enabled
+- name: sync_length
+  id: variable
+  parameters:
+    comment: ''
+    value: '320'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [344, 20.0]
+    rotation: 0
+    state: true
+- name: decode
+  id: wifi_decode_packetized
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    debug: 'False'
+    domain: cpu
+    log: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [816, 372.0]
+    rotation: 180
+    state: true
+- name: domain_conf
+  id: snippet
+  parameters:
+    alias: ''
+    code: "nbtsched = nbt.scheduler_nbt(\"nbtsched\")\ntpsched = threadpool.scheduler_threadpool(\"\
+      threadpool\", num_threads=self.nthreads)\n          \nself.add_scheduler(nbtsched)\n\
+      self.add_scheduler(tpsched)\n\ndconf = [ gr.domain_conf(nbtsched, [ self.src,\
+      \ self.pre_sync, self.sync_short, self.sync_long, self.fft_blk, self.packetize\
+      \ ]),\n          gr.domain_conf(tpsched, [ self.decode ]) ]\n\nself.partition(dconf)"
+    comment: ''
+    priority: '0'
+    section: main_after_init
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [688, 36.0]
+    rotation: 0
+    state: true
+- name: fft_blk
+  id: fft_fft
+  parameters:
+    T: complex
+    affinity: ''
+    alias: ''
+    comment: ''
+    direction: 'True'
+    domain: cuda
+    fft_size: '64'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    shift: 'True'
+    window: np.ones(64)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1104, 180.0]
+    rotation: 0
+    state: true
+- name: import_0_0
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: import numpy as np
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [520, 28.0]
+    rotation: 0
+    state: true
+- name: import_0_0_0
+  id: import
+  parameters:
+    alias: ''
+    comment: ''
+    imports: from newsched.schedulers import nbt, threadpool
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [312, 92.0]
+    rotation: 0
+    state: true
+- name: packetize
+  id: wifi_packetize_frame
+  parameters:
+    affinity: ''
+    algo: '0'
+    alias: ''
+    bw: 20e6
+    comment: ''
+    debug: 'False'
+    domain: cpu
+    freq: 2462e6
+    log: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1112, 348.0]
+    rotation: 180
+    state: true
+- name: pre_sync
+  id: wifi_pre_sync
+  parameters:
+    affinity: ''
+    alias: ''
+    buffer_size: 1024*1024*2
+    comment: ''
+    domain: cuda
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    window_size: '48'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [384, 184.0]
+    rotation: 0
+    state: true
+- name: src
+  id: fileio_file_source
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    domain: cpu
+    filename: /data/data/wifi_capt_2462_20MHz.fc32
+    itemsize: gr.sizeof_gr_complex
+    len: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    repeat: 'False'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [72, 172.0]
+    rotation: 0
+    state: true
+- name: sync_long
+  id: wifi_sync_long
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    debug: 'False'
+    domain: cuda
+    log: 'False'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    sync_length: sync_length
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [896, 180.0]
+    rotation: 0
+    state: true
+- name: sync_short
+  id: wifi_sync_short
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    debug: 'False'
+    domain: cuda
+    log: 'False'
+    maxoutbuf: '0'
+    min_plateau: '2'
+    minoutbuf: '0'
+    threshold: '0.56'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [696, 172.0]
+    rotation: 0
+    state: true
+
+connections:
+- [fft_blk, '0', packetize, '0']
+- [packetize, pdus, decode, pdus]
+- [pre_sync, '0', sync_short, '0']
+- [pre_sync, '1', sync_short, '1']
+- [pre_sync, '2', sync_short, '2']
+- [src, '0', pre_sync, '0']
+- [sync_long, '0', fft_blk, '0']
+- [sync_short, '0', sync_long, '0']
+
+metadata:
+  file_format: 1

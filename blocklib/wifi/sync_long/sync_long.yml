@@ -28,7 +28,7 @@ ports:
     id: out
     direction: output
     type: gr_complex
-    dims: '{64}'
+    dims: 64
 
 implementations:
 -   id: cpu
