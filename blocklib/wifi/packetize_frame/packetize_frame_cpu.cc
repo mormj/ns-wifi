@@ -63,17 +63,17 @@ void packetize_frame_cpu::set_algorithm(Equalizer algo)
     }
 }
 
-work_return_code_t packetize_frame_cpu::work(std::vector<block_work_input>& work_input,
-                                             std::vector<block_work_output>& work_output)
+work_return_code_t packetize_frame_cpu::work(std::vector<block_work_input_sptr>& work_input,
+                                             std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
+    auto in = work_input[0]->items<gr_complex>();
 
-    auto ninput = work_input[0].n_items;
-    auto nread = work_input[0].nitems_read();
+    auto ninput = work_input[0]->n_items;
+    auto nread = work_input[0]->nitems_read();
 
     int symbols_to_consume = ninput;
 
-    tags = work_input[0].tags_in_window(0, ninput);
+    tags = work_input[0]->tags_in_window(0, ninput);
 
     // std::cout << "PACKETIZE_FRAME : nread " << nread      << " tags " << tags.size() <<
     // std::endl; std::cout << "   packetize raw tags: " <<

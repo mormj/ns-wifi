@@ -4,14 +4,21 @@
 # this file alone
 srcs = []
 
+
+
+
 if IMPLEMENT_CPU
     srcs += files(['sync_long_cpu.cc'])
 endif
+
+
+
 if IMPLEMENT_CUDA
     srcs += files(['sync_long_cuda.cc'])
 wifi_cu_sources += files(['remove_cp.cu'])
 wifi_cu_sources += files(['multiply.cu'])
 endif
+
 gen_srcs = custom_target('gen_sync_long_srcs',
                         input : ['sync_long.yml'],
                         output : ['sync_long.cc', 'sync_long.hh', 'sync_long_pybind.cc', 
@@ -40,7 +47,9 @@ gen_impls = custom_target('gen_sync_long_impl',
 wifi_deps += declare_dependency(sources : [gen_srcs[1]] ) 
 wifi_sources += [srcs, gen_srcs[0], gen_impls]
 
-if get_option('enable_python')                           
+if get_option('enable_python') 
+    
+
     wifi_pybind_sources += gen_srcs[2]
     wifi_pybind_names += 'sync_long'
 endif

@@ -33,20 +33,20 @@ pre_sync_cuda::pre_sync_cuda(const pre_sync::block_args& args)
     // checkCudaErrors(cudaMalloc((void**)&dev_buf_8, d_buffer_size));
 }
 
-work_return_code_t pre_sync_cuda::work(std::vector<block_work_input>& work_input,
-                                           std::vector<block_work_output>& work_output)
+work_return_code_t pre_sync_cuda::work(std::vector<block_work_input_sptr>& work_input,
+                                           std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
-    auto out = work_output[0].items<gr_complex>();
-    auto abs = work_output[1].items<gr_complex>();
-    auto cor = work_output[2].items<float>();
+    auto in = work_input[0]->items<gr_complex>();
+    auto out = work_output[0]->items<gr_complex>();
+    auto abs = work_output[1]->items<gr_complex>();
+    auto cor = work_output[2]->items<float>();
 
     auto hist_samps = d_window_size + 16 - 1;
 
     // input buffer needs to be > noutput_items + hist_samps
-    int noutput = std::min(std::min(work_output[0].n_items, work_output[1].n_items),
-                           work_output[2].n_items);
-    int ninput = work_input[0].n_items;
+    int noutput = std::min(std::min(work_output[0]->n_items, work_output[1]->n_items),
+                           work_output[2]->n_items);
+    int ninput = work_input[0]->n_items;
 
     // adjust the inputs and outputs
     if (ninput < (int)(noutput + hist_samps + 16)) {
@@ -78,15 +78,15 @@ work_return_code_t pre_sync_cuda::work(std::vector<block_work_input>& work_input
 
 
 #if 0
-    auto tr = work_input[0].nitems_read();
+    auto tr = work_input[0]->nitems_read();
     // After tr == 0, maintain a history of 64 (63 prior samples)
     // auto hist_samps = tr == 0 ? 0 : 63;
     auto hist_samps = d_window_size + 16 - 1;
 
     // input buffer needs to be > noutput_items + hist_samps
-    int noutput = std::min(std::min(work_output[0].n_items, work_output[1].n_items),
-                           work_output[2].n_items);
-    int ninput = work_input[0].n_items;
+    int noutput = std::min(std::min(work_output[0]->n_items, work_output[1]->n_items),
+                           work_output[2]->n_items);
+    int ninput = work_input[0]->n_items;
 
     // adjust the inputs and outputs
     if (ninput < (noutput + hist_samps + 16)) {

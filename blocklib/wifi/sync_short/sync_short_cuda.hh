@@ -17,20 +17,20 @@ class sync_short_cuda : public sync_short
 {
 public:
     sync_short_cuda(const block_args& args);
-    virtual work_return_code_t work(std::vector<block_work_input>& work_input,
-                                    std::vector<block_work_output>& work_output) override;
+    virtual work_return_code_t work(std::vector<block_work_input_sptr>& work_input,
+                                    std::vector<block_work_output_sptr>& work_output) override;
 
     void insert_tag(uint64_t item,
                     double freq_offset,
                     uint64_t input_item,
-                    block_work_output& work_output)
+                    block_work_output_sptr& work_output)
     {
         // mylog(boost::format("frame start at in: %2% out: %1%") % item % input_item);
 
         const pmtf::wrap key = pmtf::string("wifi_start");
         const pmtf::wrap value = freq_offset;
         const pmtf::wrap srcid = pmtf::string(name());
-        work_output.add_tag(item, key, value, srcid);
+        work_output->add_tag(item, key, value, srcid);
     }
 
 private:

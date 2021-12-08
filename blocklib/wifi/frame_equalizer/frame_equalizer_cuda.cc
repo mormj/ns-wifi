@@ -165,22 +165,22 @@ void frame_equalizer_cuda::set_algorithm(Equalizer algo)
     }
 }
 
-work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input>& work_input,
-                                              std::vector<block_work_output>& work_output)
+work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input_sptr>& work_input,
+                                              std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
-    auto out = work_output[0].items<uint8_t>();
+    auto in = work_input[0]->items<gr_complex>();
+    auto out = work_output[0]->items<uint8_t>();
 
-    auto nread = work_input[0].nitems_read();
-    auto nwritten = work_output[0].nitems_written();
+    auto nread = work_input[0]->nitems_read();
+    auto nwritten = work_output[0]->nitems_written();
     // dout << "FRAME EQUALIZER: input " << ninput_items << "  output " <<
     // noutput_items << std::endl;
 
-    auto noutput_items = work_output[0].n_items;
-    auto ninput_items = work_input[0].n_items;
-    int symbols_to_consume = work_input[0].n_items;
+    auto noutput_items = work_output[0]->n_items;
+    auto ninput_items = work_input[0]->n_items;
+    int symbols_to_consume = work_input[0]->n_items;
 
-    tags = work_input[0].tags_in_window(
+    tags = work_input[0]->tags_in_window(
         0, noutput_items); //,pmt::string_to_symbol("wifi_start"));
 
     if (d_state == FINISH_LAST_FRAME) {
@@ -300,7 +300,7 @@ work_return_code_t frame_equalizer_cuda::work(std::vector<block_work_input>& wor
                         { "freq_offset", d_frame_bytes },
                     });
 
-                    work_output[0].add_tag(nwritten + o,
+                    work_output[0]->add_tag(nwritten + o,
                                            pmtf::string("wifi_start"),
                                            dict,
                                            pmtf::string(alias()));

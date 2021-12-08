@@ -1,6 +1,6 @@
 incdir = include_directories(['../include/gnuradio/wifi','../include'])
 
-wifi_deps += [newsched_runtime_dep, newsched_blocklib_digital_dep, volk_dep, fmt_dep, pmtf_dep]
+wifi_deps += [newsched_runtime_dep, newsched_blocklib_digital_dep, volk_dep, fmt_dep, pmtf_dep, python3_embed_dep]
 wifi_sources += ['utils.cc', 
                  'constellations.cc']
 wifi_sources += ['equalizer/base.cc',

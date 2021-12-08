@@ -37,17 +37,17 @@ sync_short_cuda::sync_short_cuda(const sync_short::block_args& args)
     set_tag_propagation_policy(tag_propagation_policy_t::TPP_DONT);
 }
 
-work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_input,
-                                         std::vector<block_work_output>& work_output)
+work_return_code_t sync_short_cuda::work(std::vector<block_work_input_sptr>& work_input,
+                                         std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
-    auto in_abs = work_input[1].items<gr_complex>();
-    auto  in_cor = work_input[2].items<float>();
-    auto out = work_output[0].items<gr_complex>();
+    auto in = work_input[0]->items<gr_complex>();
+    auto in_abs = work_input[1]->items<gr_complex>();
+    auto  in_cor = work_input[2]->items<float>();
+    auto out = work_output[0]->items<gr_complex>();
 
-    int noutput = work_output[0].n_items;
-    int ninput = std::min(std::min(work_input[0].n_items, work_input[1].n_items),
-                          work_input[2].n_items);
+    int noutput = work_output[0]->n_items;
+    int ninput = std::min(std::min(work_input[0]->n_items, work_input[1]->n_items),
+                          work_input[2]->n_items);
 
     noutput = std::min(ninput, noutput);
 
@@ -87,8 +87,8 @@ work_return_code_t sync_short_cuda::work(std::vector<block_work_input>& work_inp
         }
     }
 
-    uint64_t nread = work_input[0].nitems_read();
-    uint64_t nwritten = work_output[0].nitems_written();
+    uint64_t nread = work_input[0]->nitems_read();
+    uint64_t nwritten = work_output[0]->nitems_written();
 
     for (int i = 1; i < noutput; i++) {
         if (above_threshold[i]) {

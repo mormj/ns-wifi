@@ -21,12 +21,12 @@ decode_mac_cpu::decode_mac_cpu(const decode_mac::block_args& args)
 }
 
 
-work_return_code_t decode_mac_cpu::work(std::vector<block_work_input>& work_input,
-                                             std::vector<block_work_output>& work_output)
+work_return_code_t decode_mac_cpu::work(std::vector<block_work_input_sptr>& work_input,
+                                             std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
+    auto in = work_input[0]->items<gr_complex>();
 
-    auto ninput_items = work_input[0].n_items;
+    auto ninput_items = work_input[0]->n_items;
 
 	int i = 0;
 
@@ -37,7 +37,7 @@ work_return_code_t decode_mac_cpu::work(std::vector<block_work_input>& work_inpu
 	while(i < ninput_items) {
 		// Until we have good pmt comparison, just assume "wifi_start" is the tag
 		// TODO: tag search by key
-		tags = work_input[0].tags_in_window(i,i+1);
+		tags = work_input[0]->tags_in_window(i,i+1);
 		// get_tags_in_range(tags, 0, nread + i, nread + i + 1,
 		// 	pmt::string_to_symbol("wifi_start"));
 
@@ -92,7 +92,7 @@ work_return_code_t decode_mac_cpu::work(std::vector<block_work_input>& work_inpu
 
 
 
-    work_input[0].n_consumed = i;
+    work_input[0]->consume(i);
 	// consume(0, i);
 	return work_return_code_t::WORK_OK;
 }

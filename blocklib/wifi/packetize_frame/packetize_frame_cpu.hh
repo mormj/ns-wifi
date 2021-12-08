@@ -21,8 +21,8 @@ enum { WAITING_FOR_TAG, FINISH_LAST_FRAME } d_state = WAITING_FOR_TAG;
 	{
 		std::cout << "packetized " << packet_cnt << std::endl;
 	}
-    virtual work_return_code_t work(std::vector<block_work_input>& work_input,
-                                    std::vector<block_work_output>& work_output) override;
+    virtual work_return_code_t work(std::vector<block_work_input_sptr>& work_input,
+                                    std::vector<block_work_output_sptr>& work_output) override;
 
 	void set_algorithm(Equalizer algo);
 

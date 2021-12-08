@@ -36,7 +36,7 @@ thread_wrapper::thread_wrapper(int id,
         auto newblock = clonable->clone();
         auto lambda = [this, newblock](pmtf::wrap msg) 
         { 
-            return newblock->get_first_message_port(port_direction_t::INPUT)->callback()(msg); 
+            return newblock->get_message_port("pdus")->callback()(msg); 
         };
         cb_funcs.push_back((message_func_t)lambda);
     }

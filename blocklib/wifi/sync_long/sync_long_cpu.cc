@@ -22,26 +22,26 @@ sync_long_cpu::sync_long_cpu(const sync_long::block_args& args)
     set_tag_propagation_policy(tag_propagation_policy_t::TPP_DONT);
 }
 
-work_return_code_t sync_long_cpu::work(std::vector<block_work_input>& work_input,
-                                            std::vector<block_work_output>& work_output)
+work_return_code_t sync_long_cpu::work(std::vector<block_work_input_sptr>& work_input,
+                                            std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
-    auto in_delayed = work_input[1].items<gr_complex>();
-    auto out = work_output[0].items<gr_complex>();
-    auto noutput = work_output[0].n_items;
+    auto in = work_input[0]->items<gr_complex>();
+    auto in_delayed = work_input[1]->items<gr_complex>();
+    auto out = work_output[0]->items<gr_complex>();
+    auto noutput = work_output[0]->n_items;
 
     GR_LOG_DEBUG(_debug_logger,
                  "LONG ninput[0] {}  ninput[1] {} noutput {} state {}",
-                 work_input[0].n_items,
-                 work_input[1].n_items,
+                 work_input[0]->n_items,
+                 work_input[1]->n_items,
                  noutput,
                  d_state);
 
-    int ninput = std::min(std::min(work_input[0].n_items, work_input[1].n_items), 8192);
+    int ninput = std::min(std::min(work_input[0]->n_items, work_input[1]->n_items), 8192);
 
-    const uint64_t nread = work_input[0].nitems_read();
+    const uint64_t nread = work_input[0]->nitems_read();
     // get_tags_in_range(d_tags, 0, nread, nread + ninput);
-    d_tags = work_input[0].tags_in_window(0, ninput);
+    d_tags = work_input[0]->tags_in_window(0, ninput);
     if (d_tags.size()) {
         std::sort(d_tags.begin(), d_tags.end(), gr::tag_t::offset_compare);
 
@@ -100,14 +100,14 @@ work_return_code_t sync_long_cpu::work(std::vector<block_work_input>& work_input
                 // 		pmt::string_to_symbol("wifi_start"),
                 // 		pmt::from_double(d_freq_offset_short - d_freq_offset),
                 // 		pmt::string_to_symbol(name()));
-                work_output[0].add_tag(
-                    work_output[0].nitems_written(),
+                work_output[0]->add_tag(
+                    work_output[0]->nitems_written(),
                     pmtf::string("wifi_start"),
                     pmtf::scalar<double>(d_freq_offset_short - d_freq_offset),
                     pmtf::string(name()));
 
                 // std::cout << "             sl tx: " << ++ntags_tx << " ? " <<
-                // work_output[0].nitems_written() << std::endl;
+                // work_output[0]->nitems_written() << std::endl;
             }
 
             if (rel >= 0 && (rel < 128 || ((rel - 128) % 80) > 15)) {

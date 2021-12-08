@@ -4,12 +4,19 @@
 # this file alone
 srcs = []
 
+
+
+
 if IMPLEMENT_CPU
     srcs += files(['sync_short_cpu.cc'])
 endif
+
+
+
 if IMPLEMENT_CUDA
     srcs += files(['sync_short_cuda.cc'])
 endif
+
 gen_srcs = custom_target('gen_sync_short_srcs',
                         input : ['sync_short.yml'],
                         output : ['sync_short.cc', 'sync_short.hh', 'sync_short_pybind.cc', 
@@ -38,7 +45,9 @@ gen_impls = custom_target('gen_sync_short_impl',
 wifi_deps += declare_dependency(sources : [gen_srcs[1]] ) 
 wifi_sources += [srcs, gen_srcs[0], gen_impls]
 
-if get_option('enable_python')                           
+if get_option('enable_python') 
+    
+
     wifi_pybind_sources += gen_srcs[2]
     wifi_pybind_names += 'sync_short'
 endif

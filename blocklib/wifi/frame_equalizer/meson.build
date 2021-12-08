@@ -4,9 +4,15 @@
 # this file alone
 srcs = []
 
+
+
+
 if IMPLEMENT_CPU
     srcs += files(['frame_equalizer_cpu.cc'])
 endif
+
+
+
 if IMPLEMENT_CUDA
     srcs += files(['frame_equalizer_cuda.cc'])
 wifi_cu_sources += files(['equalize.cu'])
@@ -14,6 +20,7 @@ wifi_cu_sources += files(['frame_equalizer.cu'])
 wifi_cu_sources += files(['constellation.cu'])
 wifi_cu_sources += files(['multiply_const.cu'])
 endif
+
 gen_srcs = custom_target('gen_frame_equalizer_srcs',
                         input : ['frame_equalizer.yml'],
                         output : ['frame_equalizer.cc', 'frame_equalizer.hh', 'frame_equalizer_pybind.cc', 
@@ -42,7 +49,9 @@ gen_impls = custom_target('gen_frame_equalizer_impl',
 wifi_deps += declare_dependency(sources : [gen_srcs[1]] ) 
 wifi_sources += [srcs, gen_srcs[0], gen_impls]
 
-if get_option('enable_python')                           
+if get_option('enable_python') 
+    
+
     wifi_pybind_sources += gen_srcs[2]
     wifi_pybind_names += 'frame_equalizer'
 endif

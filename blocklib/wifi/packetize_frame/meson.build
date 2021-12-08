@@ -4,9 +4,13 @@
 # this file alone
 srcs = []
 
+
+
+
 if IMPLEMENT_CPU
     srcs += files(['packetize_frame_cpu.cc'])
 endif
+
 gen_srcs = custom_target('gen_packetize_frame_srcs',
                         input : ['packetize_frame.yml'],
                         output : ['packetize_frame.cc', 'packetize_frame.hh', 'packetize_frame_pybind.cc', 
@@ -35,7 +39,9 @@ gen_impls = custom_target('gen_packetize_frame_impl',
 wifi_deps += declare_dependency(sources : [gen_srcs[1]] ) 
 wifi_sources += [srcs, gen_srcs[0], gen_impls]
 
-if get_option('enable_python')                           
+if get_option('enable_python') 
+    
+
     wifi_pybind_sources += gen_srcs[2]
     wifi_pybind_names += 'packetize_frame'
 endif

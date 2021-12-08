@@ -18,19 +18,19 @@ sync_short_cpu::sync_short_cpu(const sync_short::block_args& args)
     set_tag_propagation_policy(tag_propagation_policy_t::TPP_DONT);
 }
 
-work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_input,
-                                             std::vector<block_work_output>& work_output)
+work_return_code_t sync_short_cpu::work(std::vector<block_work_input_sptr>& work_input,
+                                             std::vector<block_work_output_sptr>& work_output)
 {
-    auto in = work_input[0].items<gr_complex>();
-    auto in_abs = work_input[1].items<gr_complex>();
-    auto in_cor = work_input[2].items<float>();
-    auto out = work_output[0].items<gr_complex>();
+    auto in = work_input[0]->items<gr_complex>();
+    auto in_abs = work_input[1]->items<gr_complex>();
+    auto in_cor = work_input[2]->items<float>();
+    auto out = work_output[0]->items<gr_complex>();
 
-    int noutput = work_output[0].n_items;
-    int ninput = std::min(std::min(work_input[0].n_items, work_input[1].n_items),
-                          work_input[2].n_items);
+    int noutput = work_output[0]->n_items;
+    int ninput = std::min(std::min(work_input[0]->n_items, work_input[1]->n_items),
+                          work_input[2]->n_items);
 
-    // std::cout << "SHORT noutput : " << noutput << " ninput: " << work_input[0].n_items
+    // std::cout << "SHORT noutput : " << noutput << " ninput: " << work_input[0]->n_items
             //   << std::endl;
 
     // int o = std::min(ninput, noutput);
@@ -44,7 +44,7 @@ work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_inpu
         int i;
 
         for (i = 0; i < ninput; i++) {
-            // std::cout << work_input[0].nitems_read()+i << " " << work_input[1].nitems_read()+i << " " << work_input[2].nitems_read()+i << std::endl;
+            // std::cout << work_input[0]->nitems_read()+i << " " << work_input[1]->nitems_read()+i << " " << work_input[2]->nitems_read()+i << std::endl;
             if (in_cor[i] > d_threshold) {
                 if (d_plateau < (int)MIN_PLATEAU) {
                     d_plateau++;
@@ -54,9 +54,9 @@ work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_inpu
                     d_copied = 0;
                     d_freq_offset = arg(in_abs[i]) / 16;
                     d_plateau = 0;
-                    insert_tag(work_output[0].nitems_written(),
+                    insert_tag(work_output[0]->nitems_written(),
                                d_freq_offset,
-                               work_input[0].nitems_read() + i,
+                               work_input[0]->nitems_read() + i,
                                work_output[0]);
                     GR_LOG_DEBUG(_debug_logger, "SHORT Frame!")
                     break;
@@ -79,12 +79,12 @@ work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_inpu
 
     case COPY: {
 
-        // std::cout << work_input[0].nitems_read() << " " << work_input[1].nitems_read() << " " << work_input[2].nitems_read() << std::endl;
+        // std::cout << work_input[0]->nitems_read() << " " << work_input[1]->nitems_read() << " " << work_input[2]->nitems_read() << std::endl;
         // throw std::runtime_error("nothing");
 
         int o = 0;
         while (o < ninput && o < noutput && d_copied < MAX_SAMPLES) {
-            // std::cout << work_input[0].nitems_read()+o << " " << work_input[1].nitems_read()+o << " " << work_input[2].nitems_read()+o << std::endl;
+            // std::cout << work_input[0]->nitems_read()+o << " " << work_input[1]->nitems_read()+o << " " << work_input[2]->nitems_read()+o << std::endl;
             if (in_cor[o] > d_threshold) {
                 if (d_plateau < (int)MIN_PLATEAU) {
                     d_plateau++;
@@ -94,9 +94,9 @@ work_return_code_t sync_short_cpu::work(std::vector<block_work_input>& work_inpu
                     d_copied = 0;
                     d_plateau = 0;
                     d_freq_offset = arg(in_abs[o]) / 16;
-                    insert_tag(work_output[0].nitems_written() + o,
+                    insert_tag(work_output[0]->nitems_written() + o,
                                d_freq_offset,
-                               work_input[0].nitems_read() + o,
+                               work_input[0]->nitems_read() + o,
                                work_output[0]);
                     GR_LOG_DEBUG(_debug_logger, "SHORT Frame!");
                     break;

@@ -91,29 +91,29 @@ sync_long_cuda::sync_long_cuda(const sync_long::block_args& args)
     set_tag_propagation_policy(tag_propagation_policy_t::TPP_DONT);
 }
 
-work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_input,
-                                        std::vector<block_work_output>& work_output)
+work_return_code_t sync_long_cuda::work(std::vector<block_work_input_sptr>& work_input,
+                                        std::vector<block_work_output_sptr>& work_output)
 {
     // Since this is a decimating block, forecast for noutput
-    // int ninput = std::min(work_input[0].n_items, work_input[1].n_items);
-    auto ninput = work_input[0].n_items;
-    auto noutput = work_output[0].n_items * 64;
+    // int ninput = std::min(work_input[0]->n_items, work_input[1]->n_items);
+    auto ninput = work_input[0]->n_items;
+    auto noutput = work_output[0]->n_items * 64;
 
-    auto in = work_input[0].items<gr_complex>();
-    auto out = work_output[0].items<gr_complex>();
+    auto in = work_input[0]->items<gr_complex>();
+    auto out = work_output[0]->items<gr_complex>();
 
 
     GR_LOG_DEBUG(_debug_logger,
                  "LONG ninput[0] {}  ninput[1] {} noutput {} state {}",
-                 work_input[0].n_items,
-                 work_input[1].n_items,
+                 work_input[0]->n_items,
+                 work_input[1]->n_items,
                  noutput,
                  d_state);
 
 
-    auto nread = work_input[0].nitems_read();
-    auto nwritten = work_output[0].nitems_written();
-    tags = work_input[0].tags_in_window(0, ninput);
+    auto nread = work_input[0]->nitems_read();
+    auto nwritten = work_output[0]->nitems_written();
+    tags = work_input[0]->tags_in_window(0, ninput);
 
     // std::cout << tags.size() << std::endl;
 
@@ -283,7 +283,7 @@ work_return_code_t sync_long_cuda::work(std::vector<block_work_input>& work_inpu
                         const pmtf::wrap value = // pmt::from_long(max_index);
                             pmtf::scalar<double>(d_freq_offset_short - d_freq_offset);
                         const pmtf::wrap srcid = pmtf::string(name());
-                        work_output[0].add_tag(
+                        work_output[0]->add_tag(
                             nwritten + nproduced / 64, key, value, srcid);
                         // std::cout << "SYNC LONG tag at " << nwritten + nproduced / 64
                         // << std::endl;

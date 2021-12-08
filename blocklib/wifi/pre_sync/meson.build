@@ -4,10 +4,14 @@
 # this file alone
 srcs = []
 
+
+
+
 if IMPLEMENT_CUDA
     srcs += files(['pre_sync_cuda.cc'])
 wifi_cu_sources += files(['presync.cu'])
 endif
+
 gen_srcs = custom_target('gen_pre_sync_srcs',
                         input : ['pre_sync.yml'],
                         output : ['pre_sync.cc', 'pre_sync.hh', 'pre_sync_pybind.cc', 
@@ -36,7 +40,9 @@ gen_impls = custom_target('gen_pre_sync_impl',
 wifi_deps += declare_dependency(sources : [gen_srcs[1]] ) 
 wifi_sources += [srcs, gen_srcs[0], gen_impls]
 
-if get_option('enable_python')                           
+if get_option('enable_python') 
+    
+
     wifi_pybind_sources += gen_srcs[2]
     wifi_pybind_names += 'pre_sync'
 endif

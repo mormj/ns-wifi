@@ -7,6 +7,7 @@ subdir('include/gnuradio/wifi')
 
 wifi_sources = []
 wifi_cu_sources = []
+wifi_pure_python_sources = []
 wifi_pybind_sources = []
 wifi_pybind_names = []
 wifi_deps = []
